@@ -1,6 +1,6 @@
-mod bool;
+mod bool_logic;
 
 fn main() {
-    bool::entry_point();
+    bool_logic::entry_point();
 }
 
