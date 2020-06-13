@@ -36,6 +36,20 @@ fn xor (x: bool, y: bool) -> bool {
     )
 }
 
+fn and_2bit (x_arr: &[bool; 2], y_arr: &[bool; 2]) -> [bool; 2] {
+    let mut result: [bool; 2] = [true, true];
+    for x in 0..x_arr.len() {
+        for y in 0..y_arr.len() {
+            if x == y {
+                // result[x]= not(nand(x_arr[x], y_arr[y]));
+                result[x]= nand(nand(x_arr[x], y_arr[y]), nand(x_arr[x], y_arr[y]));
+            }
+        }
+    }
+    result
+}
+
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -76,5 +90,19 @@ mod test {
         assert_eq!(true, xor(true, false));
         assert_eq!(true, xor(false, true));
         assert_eq!(false, xor(false, false));
+    }
+
+    #[test]
+    fn and_2bit_test() {
+        assert_eq!([true, true], and_2bit(&[true, true], &[true, true]));
+        assert_eq!([true, false], and_2bit(&[true, true], &[true, false]));
+        assert_eq!([false, true], and_2bit(&[true, true], &[false, true]));
+        assert_eq!([true, false], and_2bit(&[true, false], &[true, true]));
+        assert_eq!([false, true], and_2bit(&[false, true], &[true, true]));
+        assert_eq!([false, false], and_2bit(&[true, true], &[false, false]));
+        assert_eq!([false, false], and_2bit(&[true, false], &[false, true]));
+        assert_eq!([false, false], and_2bit(&[false, false], &[true, true]));
+        assert_eq!([false, false], and_2bit(&[true, false], &[false, false]));
+        assert_eq!([false, false], and_2bit(&[false, false], &[false, true]));
     }
 }
