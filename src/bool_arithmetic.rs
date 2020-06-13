@@ -28,6 +28,22 @@ fn full_adder(a: u8, b: u8, c: u8) -> HashMap<&'static str, u8> {
     result
 }
 
+fn adder_4bit(a_arr: &[u8; 4], b_arr: &[u8; 4]) -> [u8; 5] {
+    let mut result: [u8; 5] = [1, 1, 1, 1, 1];
+    let mut carry: u8 = 0;
+
+    for a in 0..a_arr.len() {
+        for b in 0..b_arr.len() {
+            if a == b {
+                let fa = full_adder(a_arr[a], b_arr[b], carry);
+                result[result.len() - 1 - a] = fa["sum"];
+                carry = fa["carry"];
+            }
+        }
+    }
+    result
+}
+
 
 #[cfg(test)]
 mod test {
@@ -64,5 +80,10 @@ mod test {
         assert_eq!(0, full_adder(1, 0, 1)["sum"]);
         assert_eq!(0, full_adder(1, 1, 0)["sum"]);
         assert_eq!(1, full_adder(1, 1, 1)["sum"]);
+    }
+
+    #[test]
+    fn adder_4bit_test() {
+        assert_eq!([1, 0, 0, 0, 1], adder_4bit(&[0, 1, 0, 1], &[1, 1, 1, 0]))
     }
 }
