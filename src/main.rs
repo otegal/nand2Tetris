@@ -1,6 +1,4 @@
 mod bool_logic;
+mod bool_arithmetic;
 
-fn main() {
-    bool_logic::entry_point();
-}
-
+fn main() {}
