@@ -1,3 +1,6 @@
+mod bool;
+
 fn main() {
-    println!("Hello, world!");
+    bool::entry_point();
 }
+
