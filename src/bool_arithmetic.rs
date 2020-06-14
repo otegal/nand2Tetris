@@ -65,6 +65,16 @@ fn incrementer(a_arr: &[u8; 16]) -> [u8; 16] {
     result
 }
 
+// fn alu(x_arr: &[u8; 16], y_arr: [u8; 16], zx: u8, nx: u8, zy: u8, ny: u8, f: u8, no: u8)
+//     -> ([u8; 16], u8, u8)
+// {
+//     // Arithmetic and Logic Unit
+//     // zx: 入力xを0にする
+//     // nx: 入力xを反転する
+//     // zy: 入力yを0にする
+//     // ny: 入力yを反転する
+//
+// }
 
 #[cfg(test)]
 mod test {
@@ -84,7 +94,6 @@ mod test {
         assert_eq!([0; 16], converter_16bit_to_array("0000000000000000"));
         assert_eq!([1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1], converter_16bit_to_array("1001001001001001"));
     }
-
 
     #[test]
     fn half_adder_test() {
@@ -184,4 +193,9 @@ mod test {
             incrementer(&converter_16bit_to_array("1111111111111011"))
         );
     }
+
+    // #[test]
+    // fn aul_test() {
+    //
+    // }
 }

@@ -1,3 +1,5 @@
+use std::convert::{TryFrom};
+
 #[allow(dead_code)]
 pub fn entry_point() {
     println!("in bool_logic mod entry_point");
@@ -43,8 +45,8 @@ pub fn xor (x: u8, y: u8) -> u8 {
     )
 }
 
-fn and_2bit (x_arr: &[u8; 2], y_arr: &[u8; 2]) -> [u8; 2] {
-    let mut result: [u8; 2] = [1, 1];
+fn and_16bit (x_arr: &[u8; 16], y_arr: &[u8; 16]) -> [u8; 16] {
+    let mut result: [u8; 16] = [0; 16];
     for x in 0..x_arr.len() {
         for y in 0..y_arr.len() {
             if x == y {
@@ -60,6 +62,16 @@ fn and_2bit (x_arr: &[u8; 2], y_arr: &[u8; 2]) -> [u8; 2] {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    fn converter_16bit_to_array(input: &str) -> [u8; 16] {
+        let mut output: [u8; 16] = [0; 16];
+        for i in 0..input.len() {
+            output[i] = u8::try_from(
+                input.chars().nth(i).unwrap().to_digit(2).unwrap()
+            ).unwrap();
+        }
+        output
+    }
 
     #[test]
     fn nand_test() {
@@ -108,16 +120,48 @@ mod test {
     }
 
     #[test]
-    fn and_2bit_test() {
-        assert_eq!([1, 1], and_2bit(&[1, 1], &[1, 1]));
-        assert_eq!([1, 0], and_2bit(&[1, 1], &[1, 0]));
-        assert_eq!([0, 1], and_2bit(&[1, 1], &[0, 1]));
-        assert_eq!([1, 0], and_2bit(&[1, 0], &[1, 1]));
-        assert_eq!([0, 1], and_2bit(&[0, 1], &[1, 1]));
-        assert_eq!([0, 0], and_2bit(&[1, 1], &[0, 0]));
-        assert_eq!([0, 0], and_2bit(&[1, 0], &[0, 1]));
-        assert_eq!([0, 0], and_2bit(&[0, 0], &[1, 1]));
-        assert_eq!([0, 0], and_2bit(&[1, 0], &[0, 0]));
-        assert_eq!([0, 0], and_2bit(&[0, 0], &[0, 1]));
+    fn and_16bit_test() {
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            and_16bit(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("0000000000000000")
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            and_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("1111111111111111")
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("1111111111111111"),
+            and_16bit(
+                &converter_16bit_to_array("1111111111111111"),
+                &converter_16bit_to_array("1111111111111111")
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            and_16bit(
+                &converter_16bit_to_array("1010101010101010"),
+                &converter_16bit_to_array("0101010101010101")
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000110011000000"),
+            and_16bit(
+                &converter_16bit_to_array("0011110011000011"),
+                &converter_16bit_to_array("0000111111110000")
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0001000000110100"),
+            and_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("1001100001110110")
+            )
+        );
     }
 }
