@@ -5,8 +5,8 @@ pub fn entry_point() {
     println!("in bool_logic mod entry_point");
 }
 
-// 全ての基本
-pub fn nand (x: u8, y: u8) -> u8 {
+pub fn nand(x: u8, y: u8) -> u8 {
+    // 全ての基本
     if x == 1 && y == 1 {
         0
     } else {
@@ -14,46 +14,69 @@ pub fn nand (x: u8, y: u8) -> u8 {
     }
 }
 
-// Nandに同じ値をいれるとNotになるよ
-pub fn not (x: u8) -> u8 {
+pub fn not(x: u8) -> u8 {
+    // Nandに同じ値をいれるとNotになるよ
     nand(x, x)
 }
 
-// Nandの結果をNotすればOk
-pub fn and (x: u8, y: u8) -> u8 {
-    // not(nand(x, y))
-    nand(nand(x, y), nand(x, y))
+pub fn and(x: u8, y: u8) -> u8 {
+    // Nandの結果をNotすればOk
+    not(nand(x, y))
+    // nand(nand(x, y), nand(x, y))
 }
 
-// 入力した値をNotで入替えてNandに通せばOk
-pub fn or (x: u8, y: u8) -> u8 {
-    // nand(not(x), not(y))
-    nand(nand(x, x), nand(y, y))
+pub fn or(x: u8, y: u8) -> u8 {
+    // 入力した値をNotで入替えてNandに通せばOk
+    nand(not(x), not(y))
+    // nand(nand(x, x), nand(y, y))
 }
 
-// OrをNotすればOk
-pub fn nor (x: u8, y: u8) -> u8 {
-    // not(or(x, y))
-    nand(nand(nand(x, x), nand(y, y)), nand(nand(x, x), nand(y, y)))
+pub fn nor(x: u8, y: u8) -> u8 {
+    // OrをNotすればOk
+    not(or(x, y))
+    // nand(nand(nand(x, x), nand(y, y)), nand(nand(x, x), nand(y, y)))
 }
 
-// むっず。。。
-pub fn xor (x: u8, y: u8) -> u8 {
+pub fn xor(x: u8, y: u8) -> u8 {
+    // むっず。。。これは調べながら。
     nand(
         nand(x, nand(x, y)),
         nand(nand(x, y), y)
     )
 }
 
-fn and_16bit (x_arr: &[u8; 16], y_arr: &[u8; 16]) -> [u8; 16] {
+pub fn mux(x: u8, y: u8, sel: u8) -> u8 {
+    // これもググってくれ。。。
+    let selector = not(sel);
+    let a = and(x, selector);
+    let b = and(y, sel);
+    or(a, b)
+    // let selector = nand(sel, sel);
+    // let a = nand(nand(x, selector), nand(x, selector));
+    // let b = nand(nand(y, sel), nand(y, sel));
+    // nand(nand(a, a), nand(b, b))
+}
+
+pub fn dmux(input: u8, sel: u8) -> [u8; 2] {
+    let mut result: [u8; 2] = [0; 2];
+    result[0] = and(input, not(sel));
+    result[1] = and(input, sel);
+    // result[0] = nand(
+    //     nand(input, nand(sel, sel)),
+    //     nand(input, nand(sel, sel))
+    // );
+    // result[1] = nand(
+    //     nand(input, sel),
+    //     nand(input, sel)
+    // );
+    result
+}
+
+pub fn and_16bit (x_arr: &[u8; 16], y_arr: &[u8; 16]) -> [u8; 16] {
     let mut result: [u8; 16] = [0; 16];
-    for x in 0..x_arr.len() {
-        for y in 0..y_arr.len() {
-            if x == y {
-                // result[x]= not(nand(x_arr[x], y_arr[y]));
-                result[x]= nand(nand(x_arr[x], y_arr[y]), nand(x_arr[x], y_arr[y]));
-            }
-        }
+    for i in 0..16 {
+        result[i] = and(x_arr[i], y_arr[i]);
+        // result[i] = nand(nand(x_arr[i], y_arr[i]), nand(x_arr[i], y_arr[i]));
     }
     result
 }
@@ -117,6 +140,26 @@ mod test {
         assert_eq!(1, xor(1, 0));
         assert_eq!(1, xor(0, 1));
         assert_eq!(0, xor(0, 0));
+    }
+
+    #[test]
+    fn mux_test() {
+        assert_eq!(0, mux(0, 0, 0));
+        assert_eq!(0, mux(0, 1, 0));
+        assert_eq!(1, mux(1, 0, 0));
+        assert_eq!(1, mux(1, 1, 0));
+        assert_eq!(0, mux(0, 0, 1));
+        assert_eq!(1, mux(0, 1, 1));
+        assert_eq!(0, mux(1, 0, 1));
+        assert_eq!(1, mux(1, 1, 1));
+    }
+
+    #[test]
+    fn dmux_test() {
+        assert_eq!([0, 0], dmux(0, 0));
+        assert_eq!([0, 0], dmux(0, 1));
+        assert_eq!([1, 0], dmux(1, 0));
+        assert_eq!([0, 1], dmux(1, 1));
     }
 
     #[test]
