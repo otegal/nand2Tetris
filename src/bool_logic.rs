@@ -105,6 +105,53 @@ pub fn or_16bit(x_arr: &[u8; 16], y_arr: &[u8; 16]) -> [u8; 16] {
     result
 }
 
+pub fn mux_4way_16bit(a_arr: &[u8; 16], b_arr: &[u8; 16], c_arr: &[u8; 16], d_arr: &[u8; 16], sel: &[u8; 2])
+    -> [u8; 16]
+{
+    let mut result: [u8; 16] = [0; 16];
+    let mut ab: [u8; 16] = [0; 16];
+    let mut cd: [u8; 16] = [0; 16];
+    for i in 0..16 {
+        ab[i] = mux(a_arr[i], b_arr[i], sel[1]);
+        cd[i] = mux(c_arr[i], d_arr[i], sel[1]);
+        result[i] = mux(ab[i], cd[i], sel[0]);
+    }
+    result
+}
+
+pub fn mux_8way_16bit(
+    a_arr: &[u8; 16],
+    b_arr: &[u8; 16],
+    c_arr: &[u8; 16],
+    d_arr: &[u8; 16],
+    e_arr: &[u8; 16],
+    f_arr: &[u8; 16],
+    g_arr: &[u8; 16],
+    h_arr: &[u8; 16],
+    sel: &[u8; 3]) -> [u8; 16]
+{
+    let mut result: [u8; 16] = [0; 16];
+    let mut ab: [u8; 16] = [0; 16];
+    let mut cd: [u8; 16] = [0; 16];
+    let mut ef: [u8; 16] = [0; 16];
+    let mut gh: [u8; 16] = [0; 16];
+    let mut abcd: [u8; 16] = [0; 16];
+    let mut efgh: [u8; 16] = [0; 16];
+
+    for i in 0..16 {
+        ab[i] = mux(a_arr[i], b_arr[i], sel[2]);
+        cd[i] = mux(c_arr[i], d_arr[i], sel[2]);
+        ef[i] = mux(e_arr[i], f_arr[i], sel[2]);
+        gh[i] = mux(g_arr[i], h_arr[i], sel[2]);
+
+        abcd[i] = mux(ab[i], cd[i], sel[1]);
+        efgh[i] = mux(ef[i], gh[i], sel[1]);
+
+        result[i] = mux(abcd[i], efgh[i], sel[0]);
+    }
+    result
+}
+
 
 #[cfg(test)]
 mod test {
@@ -311,4 +358,317 @@ mod test {
         );
     }
 
+    #[test]
+    fn mux_4way_16bit_test() {
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_4way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[0, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_4way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[0, 1]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_4way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[1, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_4way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[1, 1]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0001001000110100"),
+            mux_4way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("1001100001110110"),
+                &converter_16bit_to_array("1010101010101010"),
+                &converter_16bit_to_array("0101010101010101"),
+                &[0, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("1001100001110110"),
+            mux_4way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("1001100001110110"),
+                &converter_16bit_to_array("1010101010101010"),
+                &converter_16bit_to_array("0101010101010101"),
+                &[0, 1]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("1010101010101010"),
+            mux_4way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("1001100001110110"),
+                &converter_16bit_to_array("1010101010101010"),
+                &converter_16bit_to_array("0101010101010101"),
+                &[1, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0101010101010101"),
+            mux_4way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("1001100001110110"),
+                &converter_16bit_to_array("1010101010101010"),
+                &converter_16bit_to_array("0101010101010101"),
+                &[1, 1]
+            )
+        );
+    }
+
+    #[test]
+    fn mux_8way_16bit_test() {
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[0, 0, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[0, 0, 1]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[0, 1, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[0, 1, 1]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[1, 0, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[1, 0, 1]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[1, 1, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000"),
+                &[1, 1, 1]
+            )
+        );
+
+
+        assert_eq!(
+            converter_16bit_to_array("0001001000110100"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("0010001101000101"),
+                &converter_16bit_to_array("0011010001010110"),
+                &converter_16bit_to_array("0100010101100111"),
+                &converter_16bit_to_array("0101011001111000"),
+                &converter_16bit_to_array("0110011110001001"),
+                &converter_16bit_to_array("0111100010011010"),
+                &converter_16bit_to_array("1000100110101011"),
+                &[0, 0, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0010001101000101"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("0010001101000101"),
+                &converter_16bit_to_array("0011010001010110"),
+                &converter_16bit_to_array("0100010101100111"),
+                &converter_16bit_to_array("0101011001111000"),
+                &converter_16bit_to_array("0110011110001001"),
+                &converter_16bit_to_array("0111100010011010"),
+                &converter_16bit_to_array("1000100110101011"),
+                &[0, 0, 1]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0011010001010110"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("0010001101000101"),
+                &converter_16bit_to_array("0011010001010110"),
+                &converter_16bit_to_array("0100010101100111"),
+                &converter_16bit_to_array("0101011001111000"),
+                &converter_16bit_to_array("0110011110001001"),
+                &converter_16bit_to_array("0111100010011010"),
+                &converter_16bit_to_array("1000100110101011"),
+                &[0, 1, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0100010101100111"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("0010001101000101"),
+                &converter_16bit_to_array("0011010001010110"),
+                &converter_16bit_to_array("0100010101100111"),
+                &converter_16bit_to_array("0101011001111000"),
+                &converter_16bit_to_array("0110011110001001"),
+                &converter_16bit_to_array("0111100010011010"),
+                &converter_16bit_to_array("1000100110101011"),
+                &[0, 1, 1]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0101011001111000"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("0010001101000101"),
+                &converter_16bit_to_array("0011010001010110"),
+                &converter_16bit_to_array("0100010101100111"),
+                &converter_16bit_to_array("0101011001111000"),
+                &converter_16bit_to_array("0110011110001001"),
+                &converter_16bit_to_array("0111100010011010"),
+                &converter_16bit_to_array("1000100110101011"),
+                &[1, 0, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0110011110001001"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("0010001101000101"),
+                &converter_16bit_to_array("0011010001010110"),
+                &converter_16bit_to_array("0100010101100111"),
+                &converter_16bit_to_array("0101011001111000"),
+                &converter_16bit_to_array("0110011110001001"),
+                &converter_16bit_to_array("0111100010011010"),
+                &converter_16bit_to_array("1000100110101011"),
+                &[1, 0, 1]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0111100010011010"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("0010001101000101"),
+                &converter_16bit_to_array("0011010001010110"),
+                &converter_16bit_to_array("0100010101100111"),
+                &converter_16bit_to_array("0101011001111000"),
+                &converter_16bit_to_array("0110011110001001"),
+                &converter_16bit_to_array("0111100010011010"),
+                &converter_16bit_to_array("1000100110101011"),
+                &[1, 1, 0]
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("1000100110101011"),
+            mux_8way_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("0010001101000101"),
+                &converter_16bit_to_array("0011010001010110"),
+                &converter_16bit_to_array("0100010101100111"),
+                &converter_16bit_to_array("0101011001111000"),
+                &converter_16bit_to_array("0110011110001001"),
+                &converter_16bit_to_array("0111100010011010"),
+                &converter_16bit_to_array("1000100110101011"),
+                &[1, 1, 1]
+            )
+        );
+    }
 }
