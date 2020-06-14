@@ -72,11 +72,35 @@ pub fn dmux(input: u8, sel: u8) -> [u8; 2] {
     result
 }
 
-pub fn and_16bit (x_arr: &[u8; 16], y_arr: &[u8; 16]) -> [u8; 16] {
+pub fn not_16bit(x_arr: &[u8; 16]) -> [u8; 16] {
+    let mut result: [u8; 16] = [0; 16];
+    for i in 0..16 {
+        result[i] = not(x_arr[i]);
+    }
+    result
+}
+
+pub fn and_16bit(x_arr: &[u8; 16], y_arr: &[u8; 16]) -> [u8; 16] {
     let mut result: [u8; 16] = [0; 16];
     for i in 0..16 {
         result[i] = and(x_arr[i], y_arr[i]);
         // result[i] = nand(nand(x_arr[i], y_arr[i]), nand(x_arr[i], y_arr[i]));
+    }
+    result
+}
+
+pub fn or_8way(x_arr: &[u8; 8]) -> u8 {
+    let mut result: u8 = 0;
+    for x in 0..x_arr.len() {
+        result = or(result, x_arr[x]);
+    }
+    result
+}
+
+pub fn or_16bit(x_arr: &[u8; 16], y_arr: &[u8; 16]) -> [u8; 16] {
+    let mut result: [u8; 16] = [0; 16];
+    for i in 0..16 {
+        result[i] = or(x_arr[i], y_arr[i]);
     }
     result
 }
@@ -163,6 +187,30 @@ mod test {
     }
 
     #[test]
+    fn not_16bit_test() {
+        assert_eq!(
+            converter_16bit_to_array("1111111111111111"),
+            not_16bit(&converter_16bit_to_array("0000000000000000"))
+        );
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            not_16bit(&converter_16bit_to_array("1111111111111111"))
+        );
+        assert_eq!(
+            converter_16bit_to_array("0101010101010101"),
+            not_16bit(&converter_16bit_to_array("1010101010101010"))
+        );
+        assert_eq!(
+            converter_16bit_to_array("1100001100111100"),
+            not_16bit(&converter_16bit_to_array("0011110011000011"))
+        );
+        assert_eq!(
+            converter_16bit_to_array("1110110111001011"),
+            not_16bit(&converter_16bit_to_array("0001001000110100"))
+        );
+    }
+
+    #[test]
     fn and_16bit_test() {
         assert_eq!(
             converter_16bit_to_array("0000000000000000"),
@@ -207,4 +255,60 @@ mod test {
             )
         );
     }
+
+    #[test]
+    fn or_8way_test() {
+        assert_eq!(0, or_8way(&[0, 0, 0, 0, 0, 0, 0, 0]));
+        assert_eq!(1, or_8way(&[1, 1, 1, 1, 1, 1, 1, 1]));
+        assert_eq!(1, or_8way(&[0, 0, 0, 1, 0, 0, 0, 0]));
+        assert_eq!(1, or_8way(&[0, 0, 0, 0, 0, 0, 0, 1]));
+        assert_eq!(1, or_8way(&[0, 0, 1, 0, 0, 1, 1, 0]));
+    }
+
+    #[test]
+    fn or_16bit_test() {
+        assert_eq!(
+            converter_16bit_to_array("0000000000000000"),
+            or_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000")
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("1111111111111111"),
+            or_16bit(
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("1111111111111111")
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("1111111111111111"),
+            or_16bit(
+                &converter_16bit_to_array("1111111111111111"),
+                &converter_16bit_to_array("1111111111111111")
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("1111111111111111"),
+            or_16bit(
+                &converter_16bit_to_array("1010101010101010"),
+                &converter_16bit_to_array("0101010101010101")
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("0011111111110011"),
+            or_16bit(
+                &converter_16bit_to_array("0011110011000011"),
+                &converter_16bit_to_array("0000111111110000")
+            )
+        );
+        assert_eq!(
+            converter_16bit_to_array("1001101001110110"),
+            or_16bit(
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("1001100001110110")
+            )
+        );
+    }
+
 }
