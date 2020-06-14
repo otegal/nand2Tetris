@@ -65,25 +65,71 @@ fn incrementer(a_arr: &[u8; 16]) -> [u8; 16] {
     result
 }
 
-// fn alu(x_arr: &[u8; 16], y_arr: [u8; 16], zx: u8, nx: u8, zy: u8, ny: u8, f: u8, no: u8)
-//     -> ([u8; 16], u8, u8)
-// {
-//     // Arithmetic and Logic Unit
-//     // zx: 入力xを0にする
-//     // nx: 入力xを反転する
-//     // zy: 入力yを0にする
-//     // ny: 入力yを反転する
-//
-// }
+fn alu(x_arr: &[u8; 16], y_arr: &[u8; 16], zx: u8, nx: u8, zy: u8, ny: u8, f: u8, no: u8)
+    -> ([u8; 16], u8, u8) {
+    // ググりまくってもよくわからん。。。
+
+    // Arithmetic and Logic Unit
+    // zx: 入力xを0にする
+    // nx: 入力xを反転する
+    // zy: 入力yを0にする
+    // ny: 入力yを反転する
+    // f:  1だったら加算、0だったらAnd演算
+    // no: 出力outを反転する
+
+    // if zx then x = 0
+    let out_zx: [u8; 16] = bool_logic::mux_16bit(x_arr, &[0; 16], zx);
+
+    // if nx then x = !x
+    let not_nx: [u8; 16] = bool_logic::not_16bit(&out_zx);
+    let out_nx: [u8; 16] = bool_logic::mux_16bit(&out_zx, &not_nx, nx);
+
+    // if zy then y = 0
+    let out_zy: [u8; 16] = bool_logic::mux_16bit(y_arr, &[0; 16], zy);
+
+    // if ny then y = !y
+    let not_ny: [u8; 16] = bool_logic::not_16bit(&out_zy);
+    let out_ny: [u8; 16] = bool_logic::mux_16bit(&out_zy, &not_ny, ny);
+
+    // if f then out = x + y
+    //      else out = x & y
+    let x_plus_y: [u8; 16] = adder_16bit(&out_nx, &out_ny);
+    let x_and_y: [u8; 16] = bool_logic::and_16bit(&out_nx, &out_ny);
+    let f_xy: [u8; 16] = bool_logic::mux_16bit(&x_and_y, &x_plus_y, f);
+
+    // if no then out = !out
+    let not_f_xy: [u8; 16] = bool_logic::not_16bit(&f_xy);
+    let out: [u8; 16] = bool_logic::mux_16bit(&f_xy, &not_f_xy, no);
+
+    let mut ret0: [u8; 8] = [0; 8];
+    let mut ret1: [u8; 8] = [0; 8];
+    let retsign: u8 = out[0];
+    for i in 0..8 { ret0[i] = out[i]; }
+    for i in 8..16 { ret1[i - 8] = out[i]; }
+
+    let ret0is0 = bool_logic::or_8way(&ret0);
+    let ret1is0 = bool_logic::or_8way(&ret1);
+
+    // if out = 0 then zr = 1 else zr = 0
+    let inverse_zr: u8 = bool_logic::or(ret0is0, ret1is0);
+    let zr: u8 = bool_logic::not(inverse_zr);
+
+    // if out < 0 then ng = 1 else ng = 0
+    let ng: u8 = bool_logic::and(retsign, 1);
+
+    (out, zr, ng)
+}
 
 #[cfg(test)]
 mod test {
     use super::*;
 
-    fn converter_16bit_to_array(input: &str) -> [u8; 16] {
+    fn converter_16bit_to_array<'a>(input: &'a str) -> [u8; 16] {
         let mut output: [u8; 16] = [0; 16];
         for i in 0..input.len() {
-            output[i] = u8::try_from(input.chars().nth(i).unwrap().to_digit(2).unwrap()).unwrap();
+            output[i] = u8::try_from(
+                input.chars().nth(i).unwrap().to_digit(2).unwrap()
+            ).unwrap();
         }
         output
     }
@@ -194,8 +240,365 @@ mod test {
         );
     }
 
-    // #[test]
-    // fn aul_test() {
-    //
-    // }
+    #[test]
+    fn aul_test() {
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            1, 0, 1, 0, 1, 0,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000000"), result.0);
+        assert_eq!(1, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            1, 1, 1, 1, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000001"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            1, 1, 1, 0, 1, 0,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111111111"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            0, 0, 1, 1, 0, 0,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000000"), result.0);
+        assert_eq!(1, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            1, 1, 0, 0, 0, 0,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111111111"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            0, 0, 1, 1, 0, 1,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111111111"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            1, 1, 0, 0, 0, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000000"), result.0);
+        assert_eq!(1, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            0, 0, 1, 1, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000000"), result.0);
+        assert_eq!(1, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            1, 1, 0, 0, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000001"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            0, 1, 1, 1, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000001"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            1, 1, 0, 1, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000000"), result.0);
+        assert_eq!(1, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            0, 0, 1, 1, 1, 0,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111111111"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            1, 1, 0, 0, 1, 0,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111111110"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            0, 0, 0, 0, 1, 0,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111111111"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            0, 1, 0, 0, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000001"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            0, 0, 0, 1, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111111111"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            0, 0, 0, 0, 0, 0,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000000"), result.0);
+        assert_eq!(1, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000000000"),
+            &converter_16bit_to_array("1111111111111111"),
+            0, 1, 0, 1, 0, 1,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111111111"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            1, 0, 1, 0, 1, 0,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000000"), result.0);
+        assert_eq!(1, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            1, 1, 1, 1, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000001"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            1, 1, 1, 0, 1, 0,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111111111"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            0, 0, 1, 1, 0, 0,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000010001"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            1, 1, 0, 0, 0, 0,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000011"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            0, 0, 1, 1, 0, 1,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111101110"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            1, 1, 0, 0, 0, 1,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111111100"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            0, 0, 1, 1, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111101111"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            1, 1, 0, 0, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111111101"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            0, 1, 1, 1, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000010010"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            1, 1, 0, 1, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000100"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            0, 0, 1, 1, 1, 0,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000010000"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            1, 1, 0, 0, 1, 0,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000010"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            0, 0, 0, 0, 1, 0,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000010100"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            0, 1, 0, 0, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000001110"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            0, 0, 0, 1, 1, 1,
+        );
+        assert_eq!(converter_16bit_to_array("1111111111110010"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(1, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            0, 0, 0, 0, 0, 0,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000000001"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+
+
+        let result = alu(
+            &converter_16bit_to_array("0000000000010001"),
+            &converter_16bit_to_array("0000000000000011"),
+            0, 1, 0, 1, 0, 1,
+        );
+        assert_eq!(converter_16bit_to_array("0000000000010011"), result.0);
+        assert_eq!(0, result.1);
+        assert_eq!(0, result.2);
+    }
 }
