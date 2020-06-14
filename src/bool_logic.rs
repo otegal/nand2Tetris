@@ -105,9 +105,7 @@ pub fn or_16bit(x_arr: &[u8; 16], y_arr: &[u8; 16]) -> [u8; 16] {
     result
 }
 
-pub fn mux_4way_16bit(a_arr: &[u8; 16], b_arr: &[u8; 16], c_arr: &[u8; 16], d_arr: &[u8; 16], sel: &[u8; 2])
-    -> [u8; 16]
-{
+pub fn mux_4way_16bit(a_arr: &[u8; 16], b_arr: &[u8; 16], c_arr: &[u8; 16], d_arr: &[u8; 16], sel: &[u8; 2]) -> [u8; 16] {
     let mut result: [u8; 16] = [0; 16];
     let mut ab: [u8; 16] = [0; 16];
     let mut cd: [u8; 16] = [0; 16];
@@ -128,8 +126,7 @@ pub fn mux_8way_16bit(
     f_arr: &[u8; 16],
     g_arr: &[u8; 16],
     h_arr: &[u8; 16],
-    sel: &[u8; 3]) -> [u8; 16]
-{
+    sel: &[u8; 3]) -> [u8; 16] {
     let mut result: [u8; 16] = [0; 16];
     let mut ab: [u8; 16] = [0; 16];
     let mut cd: [u8; 16] = [0; 16];
@@ -157,6 +154,39 @@ pub fn mux_16bit(a_arr: &[u8; 16], b_arr: &[u8; 16], sel: u8) -> [u8; 16] {
     for i in 0..16 {
         result[i] = mux(a_arr[i], b_arr[i], sel);
     }
+    result
+}
+
+pub fn dmux_4way(input: u8, sel: &[u8; 2]) -> [u8; 4] {
+    let mut result: [u8; 4] = [0; 4];
+    let temp: [u8; 2] = dmux(input, sel[1]);
+    let ac: [u8; 2] = dmux(temp[0], sel[0]);
+    let bd: [u8; 2] = dmux(temp[1], sel[0]);
+    result[0] = ac[0];
+    result[1] = bd[0];
+    result[2] = ac[1];
+    result[3] = bd[1];
+    result
+}
+
+pub fn dmux_8way(input: u8, sel: &[u8; 3]) -> [u8; 8] {
+    let mut result: [u8; 8] = [0; 8];
+    let temp: [u8; 2] = dmux(input, sel[2]);
+    let aceg: [u8; 2] = dmux(temp[0], sel[1]);
+    let bdfh: [u8; 2] = dmux(temp[1], sel[1]);
+    let ae: [u8; 2] = dmux(aceg[0], sel[0]);
+    let bf: [u8; 2] = dmux(bdfh[0], sel[0]);
+    let cg: [u8; 2] = dmux(aceg[1], sel[0]);
+    let dh: [u8; 2] = dmux(bdfh[1], sel[0]);
+
+    result[0] = ae[0];
+    result[1] = bf[0];
+    result[2] = cg[0];
+    result[3] = dh[0];
+    result[4] = ae[1];
+    result[5] = bf[1];
+    result[6] = cg[1];
+    result[7] = dh[1];
     result
 }
 
@@ -745,5 +775,37 @@ mod test {
                 1
             )
         );
+    }
+
+    #[test]
+    fn dmux_4way_test() {
+        assert_eq!([0, 0, 0, 0], dmux_4way(0, &[0, 0]));
+        assert_eq!([0, 0, 0, 0], dmux_4way(0, &[0, 1]));
+        assert_eq!([0, 0, 0, 0], dmux_4way(0, &[1, 0]));
+        assert_eq!([0, 0, 0, 0], dmux_4way(0, &[1, 1]));
+        assert_eq!([1, 0, 0, 0], dmux_4way(1, &[0, 0]));
+        assert_eq!([0, 1, 0, 0], dmux_4way(1, &[0, 1]));
+        assert_eq!([0, 0, 1, 0], dmux_4way(1, &[1, 0]));
+        assert_eq!([0, 0, 0, 1], dmux_4way(1, &[1, 1]));
+    }
+
+    #[test]
+    fn dmux_8way_test() {
+        assert_eq!([0, 0, 0, 0, 0, 0, 0, 0], dmux_8way(0, &[0, 0, 0]));
+        assert_eq!([0, 0, 0, 0, 0, 0, 0, 0], dmux_8way(0, &[0, 0, 1]));
+        assert_eq!([0, 0, 0, 0, 0, 0, 0, 0], dmux_8way(0, &[0, 1, 0]));
+        assert_eq!([0, 0, 0, 0, 0, 0, 0, 0], dmux_8way(0, &[0, 1, 1]));
+        assert_eq!([0, 0, 0, 0, 0, 0, 0, 0], dmux_8way(0, &[1, 0, 0]));
+        assert_eq!([0, 0, 0, 0, 0, 0, 0, 0], dmux_8way(0, &[1, 0, 1]));
+        assert_eq!([0, 0, 0, 0, 0, 0, 0, 0], dmux_8way(0, &[1, 1, 0]));
+        assert_eq!([0, 0, 0, 0, 0, 0, 0, 0], dmux_8way(0, &[1, 1, 1]));
+        assert_eq!([1, 0, 0, 0, 0, 0, 0, 0], dmux_8way(1, &[0, 0, 0]));
+        assert_eq!([0, 1, 0, 0, 0, 0, 0, 0], dmux_8way(1, &[0, 0, 1]));
+        assert_eq!([0, 0, 1, 0, 0, 0, 0, 0], dmux_8way(1, &[0, 1, 0]));
+        assert_eq!([0, 0, 0, 1, 0, 0, 0, 0], dmux_8way(1, &[0, 1, 1]));
+        assert_eq!([0, 0, 0, 0, 1, 0, 0, 0], dmux_8way(1, &[1, 0, 0]));
+        assert_eq!([0, 0, 0, 0, 0, 1, 0, 0], dmux_8way(1, &[1, 0, 1]));
+        assert_eq!([0, 0, 0, 0, 0, 0, 1, 0], dmux_8way(1, &[1, 1, 0]));
+        assert_eq!([0, 0, 0, 0, 0, 0, 0, 1], dmux_8way(1, &[1, 1, 1]));
     }
 }
