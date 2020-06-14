@@ -1,5 +1,6 @@
 use crate::bool_logic;
 use std::collections::HashMap;
+use std::convert::{TryFrom};
 
 #[allow(dead_code)]
 pub fn entry_point() {
@@ -30,7 +31,7 @@ fn full_adder(a: u8, b: u8, c: u8) -> HashMap<&'static str, u8> {
 
 fn adder_16bit(a_arr: &[u8; 16], b_arr: &[u8; 16]) -> [u8; 16] {
     // without overflow check
-    let mut result: [u8; 16] = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+    let mut result: [u8; 16] = [0; 16];
     let mut carry: u8 = 0;
 
     for a in 0..a_arr.len() {
@@ -49,7 +50,7 @@ fn incrementer(a_arr: &[u8; 16]) -> [u8; 16] {
     const INCREMENTER: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
 
     // without overflow check
-    let mut result: [u8; 16] = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+    let mut result: [u8; 16] = [0; 16];
     let mut carry: u8 = 0;
 
     for a in 0..a_arr.len() {
@@ -68,6 +69,22 @@ fn incrementer(a_arr: &[u8; 16]) -> [u8; 16] {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    fn converter_16bit_to_array(input: &str) -> [u8; 16] {
+        let mut output: [u8; 16] = [0; 16];
+        for i in 0..input.len() {
+            output[i] = u8::try_from(input.chars().nth(i).unwrap().to_digit(2).unwrap()).unwrap();
+        }
+        output
+    }
+
+    #[test]
+    fn converter_16bit_to_array_test() {
+        assert_eq!([1; 16], converter_16bit_to_array("1111111111111111"));
+        assert_eq!([0; 16], converter_16bit_to_array("0000000000000000"));
+        assert_eq!([1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1], converter_16bit_to_array("1001001001001001"));
+    }
+
 
     #[test]
     fn half_adder_test() {
@@ -105,45 +122,45 @@ mod test {
     #[test]
     fn adder_16bit_test() {
         assert_eq!(
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            converter_16bit_to_array("0000000000000000"),
             adder_16bit(
-                &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("0000000000000000")
             )
         );
         assert_eq!(
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            converter_16bit_to_array("1111111111111111"),
             adder_16bit(
-                &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                &[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+                &converter_16bit_to_array("0000000000000000"),
+                &converter_16bit_to_array("1111111111111111")
             )
         );
         assert_eq!(
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+            converter_16bit_to_array("1111111111111110"),
             adder_16bit(
-                &[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                &[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+                &converter_16bit_to_array("1111111111111111"),
+                &converter_16bit_to_array("1111111111111111")
             )
         );
         assert_eq!(
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            converter_16bit_to_array("1111111111111111"),
             adder_16bit(
-                &[1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-                &[0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+                &converter_16bit_to_array("1010101010101010"),
+                &converter_16bit_to_array("0101010101010101")
             )
         );
         assert_eq!(
-            [0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1],
+            converter_16bit_to_array("0100110010110011"),
             adder_16bit(
-                &[0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1],
-                &[0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0]
+                &converter_16bit_to_array("0011110011000011"),
+                &converter_16bit_to_array("0000111111110000")
             )
         );
         assert_eq!(
-            [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+            converter_16bit_to_array("1010101010101010"),
             adder_16bit(
-                &[0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0],
-                &[1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0]
+                &converter_16bit_to_array("0001001000110100"),
+                &converter_16bit_to_array("1001100001110110")
             )
         );
     }
@@ -151,20 +168,20 @@ mod test {
     #[test]
     fn incrementer_test() {
         assert_eq!(
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            incrementer(&[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+            converter_16bit_to_array("0000000000000001"),
+            incrementer(&converter_16bit_to_array("0000000000000000"))
         );
         assert_eq!(
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            incrementer(&[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+            converter_16bit_to_array("0000000000000000"),
+            incrementer(&converter_16bit_to_array("1111111111111111"))
         );
         assert_eq!(
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
-            incrementer(&[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1])
+            converter_16bit_to_array("0000000000000110"),
+            incrementer(&converter_16bit_to_array("0000000000000101"))
         );
         assert_eq!(
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-            incrementer(&[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1])
+            converter_16bit_to_array("1111111111111100"),
+            incrementer(&converter_16bit_to_array("1111111111111011"))
         );
     }
 }
