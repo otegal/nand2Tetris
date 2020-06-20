@@ -109,7 +109,6 @@ impl Ram8 {
     }
     fn exec(&mut self, input_arr: &[u8; 16], load: u8, address: &[u8; 3]) -> [u8; 16] {
         let selector = bool_logic::dmux_8way(load, address);
-        println!("{:?} {:?} {:?}",load, address, selector);
         bool_logic::mux_8way_16bit(
             &self.registers[0].exec(input_arr, selector[0]),
             &self.registers[1].exec(input_arr, selector[1]),
@@ -124,12 +123,61 @@ impl Ram8 {
     }
 }
 
+struct Ram64 {
+    rams: [Ram8; 8]
+}
+
+impl Ram64 {
+    fn new() -> Ram64 {
+        Ram64 {
+            rams: [
+                Ram8::new(),
+                Ram8::new(),
+                Ram8::new(),
+                Ram8::new(),
+                Ram8::new(),
+                Ram8::new(),
+                Ram8::new(),
+                Ram8::new(),
+            ]
+        }
+    }
+    fn exec(&mut self, input: &[u8; 16], load: u8, address: &[u8; 6]) -> [u8; 16] {
+        let upper = [address[0], address[1], address[2]];
+        let lower = [address[3], address[4], address[5]];
+        let selector = bool_logic::dmux_8way(load, &upper);
+
+        bool_logic::mux_8way_16bit(
+            &self.rams[0].exec(input, selector[0], &lower),
+            &self.rams[1].exec(input, selector[1], &lower),
+            &self.rams[2].exec(input, selector[2], &lower),
+            &self.rams[3].exec(input, selector[3], &lower),
+            &self.rams[4].exec(input, selector[4], &lower),
+            &self.rams[5].exec(input, selector[5], &lower),
+            &self.rams[6].exec(input, selector[6], &lower),
+            &self.rams[7].exec(input, selector[7], &lower),
+            &upper
+        )
+    }
+}
+
+
 #[cfg(test)]
 mod test {
     use super::*;
 
     fn converter_16bit_to_array<'a>(input: &'a str) -> [u8; 16] {
         let mut output: [u8; 16] = [0; 16];
+        for i in 0..input.len() {
+            output[i] = u8::try_from(
+                input.chars().nth(i).unwrap().to_digit(2).unwrap()
+            ).unwrap();
+        }
+        output
+    }
+
+    fn converter_6bit_to_array<'a>(input: &'a str) -> [u8; 6] {
+        let mut output: [u8; 6] = [0; 6];
         for i in 0..input.len() {
             output[i] = u8::try_from(
                 input.chars().nth(i).unwrap().to_digit(2).unwrap()
@@ -151,13 +199,53 @@ mod test {
     fn register_test_exec(expect: i16, input: i16, load: u8, register: &mut Register) {
         // .cpmファイルが10進数で記載されているのでビット列に変換してから比較する
         // expect
-        let formatted_expect: String = format!("{:0b}", expect);
+        let pre_formatted_expect: String = format!("{:0b}", expect);
+        let formatted_expect: String = format!("{:0>16}", pre_formatted_expect);
         let expect_arr: [u8; 16] = converter_16bit_to_array(&formatted_expect);
         // input
-        let formatted_input: String = format!("{:0b}", input);
+        let pre_formatted_input: String = format!("{:0b}", input);
+        let formatted_input: String = format!("{:0>16}", pre_formatted_input);
         let input_arr: [u8; 16] = converter_16bit_to_array(&formatted_input);
 
         assert_eq!(expect_arr, register.exec(&input_arr, load));
+    }
+
+    fn ram8_test_exec(expect: i16, input: i16, load: u8, address: u8, ram8: &mut Ram8) {
+        // .cpmファイルが10進数で記載されているのでビット列に変換してから比較する
+        // expect
+        let pre_formatted_expect: String = format!("{:0b}", expect);
+        let formatted_expect: String = format!("{:0>16}", pre_formatted_expect);
+        let expect_arr: [u8; 16] = converter_16bit_to_array(&formatted_expect);
+        // input
+        let pre_formatted_input: String = format!("{:0b}", input);
+        let formatted_input: String = format!("{:0>16}", pre_formatted_input);
+        let input_arr: [u8; 16] = converter_16bit_to_array(&formatted_input);
+        // address
+        let pre_formatted_address: String = format!("{:0b}", address);
+        let formatted_address: String = format!("{:0>3}",pre_formatted_address);
+        let address_arr: [u8; 3] = converter_3bit_to_array(&formatted_address);
+
+        assert_eq!(expect_arr, ram8.exec(&input_arr, load, &address_arr));
+    }
+
+    fn ram64_test_exec(expect: i16, input: i16, load: u8, address: u8, ram64: &mut Ram64) {
+        // .cpmファイルが10進数で記載されているのでビット列に変換してから比較する
+        // expect
+        let pre_formatted_expect: String = format!("{:0b}", expect);
+        let formatted_expect: String = format!("{:0>16}", pre_formatted_expect);
+        let expect_arr: [u8; 16] = converter_16bit_to_array(&formatted_expect);
+
+        // input
+        let pre_formatted_input: String = format!("{:0b}", input);
+        let formatted_input: String = format!("{:0>16}", pre_formatted_input);
+        let input_arr: [u8; 16] = converter_16bit_to_array(&formatted_input);
+
+        // address
+        let pre_formatted_address: String = format!("{:0b}", address);
+        let formatted_address: String = format!("{:0>6}",pre_formatted_address);
+        let address_arr: [u8; 6] = converter_6bit_to_array(&formatted_address);
+
+        assert_eq!(expect_arr, ram64.exec(&input_arr, load, &address_arr));
     }
 
     #[test]
@@ -543,22 +631,6 @@ mod test {
         register_test_exec( 32767,  32767 , 1, &mut register);
     }
 
-    fn ram8_test_exec(expect: i16, input: i16, load: u8, address: u8, ram8: &mut Ram8) {
-        // .cpmファイルが10進数で記載されているのでビット列に変換してから比較する
-        // expect
-        let formatted_expect: String = format!("{:0b}", expect);
-        let expect_arr: [u8; 16] = converter_16bit_to_array(&formatted_expect);
-        // input
-        let formatted_input: String = format!("{:0b}", input);
-        let input_arr: [u8; 16] = converter_16bit_to_array(&formatted_input);
-        // address
-        let pre_formatted_address: String = format!("{:0b}", address);
-        let formatted_address: String = format!("{:0>3}",pre_formatted_address);
-        let address_arr: [u8; 3] = converter_3bit_to_array(&formatted_address);
-
-        assert_eq!(expect_arr, ram8.exec(&input_arr, load, &address_arr));
-    }
-
     #[test]
     fn ram8_test() {
         let mut ram8 = Ram8::new();
@@ -733,5 +805,329 @@ mod test {
         ram8_test_exec( 21845,  21845, 0, 5, &mut ram8);
         ram8_test_exec( 21845,  21845, 0, 6, &mut ram8);
         ram8_test_exec( 21845,  21845, 0, 7, &mut ram8);
+    }
+
+    #[test]
+    fn ram64_test() {
+        let mut ram64 = Ram64::new();
+        ram64_test_exec(     0,      0, 0,   0, &mut ram64);
+        ram64_test_exec(     0,      0, 0,   0, &mut ram64);
+        ram64_test_exec(     0,      0, 1,   0, &mut ram64);
+        ram64_test_exec(     0,      0, 1,   0, &mut ram64);
+        ram64_test_exec(     0,   1313, 0,   0, &mut ram64);
+        ram64_test_exec(     0,   1313, 0,   0, &mut ram64);
+        ram64_test_exec(     0,   1313, 1,  13, &mut ram64);
+        ram64_test_exec(  1313,   1313, 1,  13, &mut ram64);
+        ram64_test_exec(     0,   1313, 0,   0, &mut ram64);
+        ram64_test_exec(     0,   1313, 0,   0, &mut ram64);
+        ram64_test_exec(     0,   4747, 0,  47, &mut ram64);
+        ram64_test_exec(     0,   4747, 0,  47, &mut ram64);
+        ram64_test_exec(     0,   4747, 1,  47, &mut ram64);
+        ram64_test_exec(  4747,   4747, 1,  47, &mut ram64);
+        ram64_test_exec(  4747,   4747, 0,  47, &mut ram64);
+        ram64_test_exec(  4747,   4747, 0,  47, &mut ram64);
+        ram64_test_exec(  1313,   4747, 0,  13, &mut ram64);
+        ram64_test_exec(  1313,   6363, 0,  13, &mut ram64);
+        ram64_test_exec(  1313,   6363, 0,  13, &mut ram64);
+        ram64_test_exec(     0,   6363, 1,  63, &mut ram64);
+        ram64_test_exec(  6363,   6363, 1,  63, &mut ram64);
+        ram64_test_exec(  6363,   6363, 0,  63, &mut ram64);
+        ram64_test_exec(  6363,   6363, 0,  63, &mut ram64);
+        ram64_test_exec(  4747,   6363, 0,  47, &mut ram64);
+        ram64_test_exec(  6363,   6363, 0,  63, &mut ram64);
+        ram64_test_exec(     0,   6363, 0,  40, &mut ram64);
+        ram64_test_exec(     0,   6363, 0,  40, &mut ram64);
+        ram64_test_exec(     0,   6363, 0,  41, &mut ram64);
+        ram64_test_exec(     0,   6363, 0,  42, &mut ram64);
+        ram64_test_exec(     0,   6363, 0,  43, &mut ram64);
+        ram64_test_exec(     0,   6363, 0,  44, &mut ram64);
+        ram64_test_exec(     0,   6363, 0,  45, &mut ram64);
+        ram64_test_exec(     0,   6363, 0,  46, &mut ram64);
+        ram64_test_exec(  4747,   6363, 0,  47, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  40, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  40, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  41, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  41, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  42, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  42, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  43, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  43, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  44, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  44, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  45, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  45, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  46, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  46, &mut ram64);
+        ram64_test_exec(  4747,  21845, 1,  47, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  47, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  40, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  40, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  41, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  42, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  43, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  44, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  45, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  46, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  47, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  40, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  40, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  40, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  41, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  42, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  43, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  44, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  46, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  47, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  40, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  41, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  41, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  41, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  42, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  43, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  44, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  46, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  47, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  41, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  41, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  42, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  42, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  41, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  42, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  43, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  44, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  46, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  47, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  42, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  42, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  43, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  43, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  41, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  42, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  43, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  44, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  46, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  47, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  43, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  43, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  44, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  44, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  41, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  42, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  43, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  44, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  46, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  47, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  44, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  44, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  45, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  41, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  42, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  43, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  44, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  46, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  47, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  45, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  46, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  46, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  41, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  42, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  43, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  44, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  46, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  47, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  46, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  46, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  47, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  47, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  40, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  41, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  42, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  43, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  44, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  46, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  47, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  47, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  47, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  40, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  40, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  41, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  42, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  43, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  44, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  45, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  46, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  47, &mut ram64);
+        ram64_test_exec(     0,  21845, 0,   5, &mut ram64);
+        ram64_test_exec(     0,  21845, 0,   5, &mut ram64);
+        ram64_test_exec(  1313,  21845, 0,  13, &mut ram64);
+        ram64_test_exec(     0,  21845, 0,  21, &mut ram64);
+        ram64_test_exec(     0,  21845, 0,  29, &mut ram64);
+        ram64_test_exec(     0,  21845, 0,  37, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  45, &mut ram64);
+        ram64_test_exec(     0,  21845, 0,  53, &mut ram64);
+        ram64_test_exec(     0,  21845, 0,  61, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,   5, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,   5, &mut ram64);
+        ram64_test_exec(  1313,  21845, 1,  13, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  13, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  21, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  21, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  29, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  29, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  37, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  37, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  45, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  45, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  53, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  53, &mut ram64);
+        ram64_test_exec(     0,  21845, 1,  61, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  61, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,   5, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,   5, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  13, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  21, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  29, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  37, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  45, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  53, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  61, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,   5, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,   5, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,   5, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  13, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  21, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  29, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  37, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  53, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  61, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,   5, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  13, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  13, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  13, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  21, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  29, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  37, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  53, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  61, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  13, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  13, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  21, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  21, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  13, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  21, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  29, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  37, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  53, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  61, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  21, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  21, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  29, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  29, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  13, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  21, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  29, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  37, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  53, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  61, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  29, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  29, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  37, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  37, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  13, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  21, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  29, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  37, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  53, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  61, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  37, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  37, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  45, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  13, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  21, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  29, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  37, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  53, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  61, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  45, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  53, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  53, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  13, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  21, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  29, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  37, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  53, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  61, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  53, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  53, &mut ram64);
+        ram64_test_exec( 21845, -21846, 1,  61, &mut ram64);
+        ram64_test_exec(-21846, -21846, 1,  61, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,   5, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  13, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  21, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  29, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  37, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  45, &mut ram64);
+        ram64_test_exec( 21845, -21846, 0,  53, &mut ram64);
+        ram64_test_exec(-21846, -21846, 0,  61, &mut ram64);
+        ram64_test_exec(-21846,  21845, 1,  61, &mut ram64);
+        ram64_test_exec( 21845,  21845, 1,  61, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,   5, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,   5, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  13, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  21, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  29, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  37, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  45, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  53, &mut ram64);
+        ram64_test_exec( 21845,  21845, 0,  61, &mut ram64);
     }
 }
