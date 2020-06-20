@@ -262,12 +262,47 @@ fn register(input_arr: &[u8; 16], load: u8) -> [u8; 16] {
     output
 }
 
+fn ram8(input_arr: &[u8; 16], load: u8, address: &[u8; 3]) -> [u8; 16] {
+    let address_load = bool_logic::dmux_8way(load, address);
+
+    let reg0 = register(input_arr, address_load[0]);
+    let reg1 = register(input_arr, address_load[1]);
+    let reg2 = register(input_arr, address_load[2]);
+    let reg3 = register(input_arr, address_load[3]);
+    let reg4 = register(input_arr, address_load[4]);
+    let reg5 = register(input_arr, address_load[5]);
+    let reg6 = register(input_arr, address_load[6]);
+    let reg7 = register(input_arr, address_load[7]);
+
+    bool_logic::mux_8way_16bit(
+        &reg0,
+        &reg1,
+        &reg2,
+        &reg3,
+        &reg4,
+        &reg5,
+        &reg6,
+        &reg7,
+        &address,
+    )
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
 
     fn converter_16bit_to_array<'a>(input: &'a str) -> [u8; 16] {
         let mut output: [u8; 16] = [0; 16];
+        for i in 0..input.len() {
+            output[i] = u8::try_from(
+                input.chars().nth(i).unwrap().to_digit(2).unwrap()
+            ).unwrap();
+        }
+        output
+    }
+
+    fn converter_3bit_to_array<'a>(input: &'a str) -> [u8; 3] {
+        let mut output: [u8; 3] = [0; 3];
         for i in 0..input.len() {
             output[i] = u8::try_from(
                 input.chars().nth(i).unwrap().to_digit(2).unwrap()
@@ -292,6 +327,21 @@ mod test {
         let input_arr: [u8; 16] = converter_16bit_to_array(&formatted_input);
 
         assert_eq!(expect_arr, register(&input_arr, load));
+    }
+
+    fn ram8_test_exec(expect: i16, input: i16, load: u8, address: u8) {
+        tick_tock();
+        // .cpmファイルが10進数で記載されているのでビット列に変換してから比較する
+        // expect
+        let formatted_expect: String = format!("{:0b}", expect);
+        let expect_arr: [u8; 16] = converter_16bit_to_array(&formatted_expect);
+        // input
+        let formatted_input: String = format!("{:0b}", input);
+        let input_arr: [u8; 16] = converter_16bit_to_array(&formatted_input);
+        // address
+        let formatted_address: String = format!("{:0b}", address);
+        let address_arr: [u8; 3] = converter_3bit_to_array(&formatted_address);
+        assert_eq!(expect_arr, ram8(&input_arr, load, &address_arr));
     }
 
     #[test]
@@ -689,5 +739,181 @@ mod test {
             STOCKED_BEFORE_DFF_INPUT_14 = 0;
             STOCKED_BEFORE_DFF_INPUT_15 = 0;
         }
+    }
+
+    #[test]
+    fn ram8_test() {
+        ram8_test_exec(     0,      0, 0, 0);
+        ram8_test_exec(     0,      0, 0, 0);
+        ram8_test_exec(     0,      0, 1, 0);
+        ram8_test_exec(     0,      0, 1, 0);
+        ram8_test_exec(     0,  11111, 0, 0);
+        ram8_test_exec(     0,  11111, 0, 0);
+        // ram8_test_exec(     0,  11111, 1, 1);
+        // ram8_test_exec( 11111,  11111, 1, 1);
+        // ram8_test_exec(     0,  11111, 0, 0);
+        // ram8_test_exec(     0,  11111, 0, 0);
+        // ram8_test_exec(     0,   3333, 0, 3);
+        // ram8_test_exec(     0,   3333, 0, 3);
+        // ram8_test_exec(     0,   3333, 1, 3);
+        // ram8_test_exec(  3333,   3333, 1, 3);
+        // ram8_test_exec(  3333,   3333, 0, 3);
+        // ram8_test_exec(  3333,   3333, 0, 3);
+        // ram8_test_exec( 11111,   3333, 0, 1);
+        // ram8_test_exec( 11111,   7777, 0, 1);
+        // ram8_test_exec( 11111,   7777, 0, 1);
+        // ram8_test_exec(     0,   7777, 1, 7);
+        // ram8_test_exec(  7777,   7777, 1, 7);
+        // ram8_test_exec(  7777,   7777, 0, 7);
+        // ram8_test_exec(  7777,   7777, 0, 7);
+        // ram8_test_exec(  3333,   7777, 0, 3);
+        // ram8_test_exec(  7777,   7777, 0, 7);
+        // ram8_test_exec(     0,   7777, 0, 0);
+        // ram8_test_exec(     0,   7777, 0, 0);
+        // ram8_test_exec( 11111,   7777, 0, 1);
+        // ram8_test_exec(     0,   7777, 0, 2);
+        // ram8_test_exec(  3333,   7777, 0, 3);
+        // ram8_test_exec(     0,   7777, 0, 4);
+        // ram8_test_exec(     0,   7777, 0, 5);
+        // ram8_test_exec(     0,   7777, 0, 6);
+        // ram8_test_exec(  7777,   7777, 0, 7);
+        // ram8_test_exec(     0,  21845, 1, 0);
+        // ram8_test_exec( 21845,  21845, 1, 0);
+        // ram8_test_exec( 11111,  21845, 1, 1);
+        // ram8_test_exec( 21845,  21845, 1, 1);
+        // ram8_test_exec(     0,  21845, 1, 2);
+        // ram8_test_exec( 21845,  21845, 1, 2);
+        // ram8_test_exec(  3333,  21845, 1, 3);
+        // ram8_test_exec( 21845,  21845, 1, 3);
+        // ram8_test_exec(     0,  21845, 1, 4);
+        // ram8_test_exec( 21845,  21845, 1, 4);
+        // ram8_test_exec(     0,  21845, 1, 5);
+        // ram8_test_exec( 21845,  21845, 1, 5);
+        // ram8_test_exec(     0,  21845, 1, 6);
+        // ram8_test_exec( 21845,  21845, 1, 6);
+        // ram8_test_exec(  7777,  21845, 1, 7);
+        // ram8_test_exec( 21845,  21845, 1, 7);
+        // ram8_test_exec( 21845,  21845, 0, 0);
+        // ram8_test_exec( 21845,  21845, 0, 0);
+        // ram8_test_exec( 21845,  21845, 0, 1);
+        // ram8_test_exec( 21845,  21845, 0, 2);
+        // ram8_test_exec( 21845,  21845, 0, 3);
+        // ram8_test_exec( 21845,  21845, 0, 4);
+        // ram8_test_exec( 21845,  21845, 0, 5);
+        // ram8_test_exec( 21845,  21845, 0, 6);
+        // ram8_test_exec( 21845,  21845, 0, 7);
+        // ram8_test_exec( 21845, -21846, 1, 0);
+        // ram8_test_exec(-21846, -21846, 1, 0);
+        // ram8_test_exec(-21846, -21846, 0, 0);
+        // ram8_test_exec(-21846, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 1);
+        // ram8_test_exec( 21845, -21846, 0, 2);
+        // ram8_test_exec( 21845, -21846, 0, 3);
+        // ram8_test_exec( 21845, -21846, 0, 4);
+        // ram8_test_exec( 21845, -21846, 0, 5);
+        // ram8_test_exec( 21845, -21846, 0, 6);
+        // ram8_test_exec( 21845, -21846, 0, 7);
+        // ram8_test_exec(-21846,  21845, 1, 0);
+        // ram8_test_exec( 21845,  21845, 1, 0);
+        // ram8_test_exec( 21845, -21846, 1, 1);
+        // ram8_test_exec(-21846, -21846, 1, 1);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec(-21846, -21846, 0, 1);
+        // ram8_test_exec( 21845, -21846, 0, 2);
+        // ram8_test_exec( 21845, -21846, 0, 3);
+        // ram8_test_exec( 21845, -21846, 0, 4);
+        // ram8_test_exec( 21845, -21846, 0, 5);
+        // ram8_test_exec( 21845, -21846, 0, 6);
+        // ram8_test_exec( 21845, -21846, 0, 7);
+        // ram8_test_exec(-21846,  21845, 1, 1);
+        // ram8_test_exec( 21845,  21845, 1, 1);
+        // ram8_test_exec( 21845, -21846, 1, 2);
+        // ram8_test_exec(-21846, -21846, 1, 2);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 1);
+        // ram8_test_exec(-21846, -21846, 0, 2);
+        // ram8_test_exec( 21845, -21846, 0, 3);
+        // ram8_test_exec( 21845, -21846, 0, 4);
+        // ram8_test_exec( 21845, -21846, 0, 5);
+        // ram8_test_exec( 21845, -21846, 0, 6);
+        // ram8_test_exec( 21845, -21846, 0, 7);
+        // ram8_test_exec(-21846,  21845, 1, 2);
+        // ram8_test_exec( 21845,  21845, 1, 2);
+        // ram8_test_exec( 21845, -21846, 1, 3);
+        // ram8_test_exec(-21846, -21846, 1, 3);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 1);
+        // ram8_test_exec( 21845, -21846, 0, 2);
+        // ram8_test_exec(-21846, -21846, 0, 3);
+        // ram8_test_exec( 21845, -21846, 0, 4);
+        // ram8_test_exec( 21845, -21846, 0, 5);
+        // ram8_test_exec( 21845, -21846, 0, 6);
+        // ram8_test_exec( 21845, -21846, 0, 7);
+        // ram8_test_exec(-21846,  21845, 1, 3);
+        // ram8_test_exec( 21845,  21845, 1, 3);
+        // ram8_test_exec( 21845, -21846, 1, 4);
+        // ram8_test_exec(-21846, -21846, 1, 4);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 1);
+        // ram8_test_exec( 21845, -21846, 0, 2);
+        // ram8_test_exec( 21845, -21846, 0, 3);
+        // ram8_test_exec(-21846, -21846, 0, 4);
+        // ram8_test_exec( 21845, -21846, 0, 5);
+        // ram8_test_exec( 21845, -21846, 0, 6);
+        // ram8_test_exec( 21845, -21846, 0, 7);
+        // ram8_test_exec(-21846,  21845, 1, 4);
+        // ram8_test_exec( 21845,  21845, 1, 4);
+        // ram8_test_exec( 21845, -21846, 1, 5);
+        // ram8_test_exec(-21846, -21846, 1, 5);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 1);
+        // ram8_test_exec( 21845, -21846, 0, 2);
+        // ram8_test_exec( 21845, -21846, 0, 3);
+        // ram8_test_exec( 21845, -21846, 0, 4);
+        // ram8_test_exec(-21846, -21846, 0, 5);
+        // ram8_test_exec( 21845, -21846, 0, 6);
+        // ram8_test_exec( 21845, -21846, 0, 7);
+        // ram8_test_exec(-21846,  21845, 1, 5);
+        // ram8_test_exec( 21845,  21845, 1, 5);
+        // ram8_test_exec( 21845, -21846, 1, 6);
+        // ram8_test_exec(-21846, -21846, 1, 6);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 1);
+        // ram8_test_exec( 21845, -21846, 0, 2);
+        // ram8_test_exec( 21845, -21846, 0, 3);
+        // ram8_test_exec( 21845, -21846, 0, 4);
+        // ram8_test_exec( 21845, -21846, 0, 5);
+        // ram8_test_exec(-21846, -21846, 0, 6);
+        // ram8_test_exec( 21845, -21846, 0, 7);
+        // ram8_test_exec(-21846,  21845, 1, 6);
+        // ram8_test_exec( 21845,  21845, 1, 6);
+        // ram8_test_exec( 21845, -21846, 1, 7);
+        // ram8_test_exec(-21846, -21846, 1, 7);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 0);
+        // ram8_test_exec( 21845, -21846, 0, 1);
+        // ram8_test_exec( 21845, -21846, 0, 2);
+        // ram8_test_exec( 21845, -21846, 0, 3);
+        // ram8_test_exec( 21845, -21846, 0, 4);
+        // ram8_test_exec( 21845, -21846, 0, 5);
+        // ram8_test_exec( 21845, -21846, 0, 6);
+        // ram8_test_exec(-21846, -21846, 0, 7);
+        // ram8_test_exec(-21846,  21845, 1, 7);
+        // ram8_test_exec( 21845,  21845, 1, 7);
+        // ram8_test_exec( 21845,  21845, 0, 0);
+        // ram8_test_exec( 21845,  21845, 0, 0);
+        // ram8_test_exec( 21845,  21845, 0, 1);
+        // ram8_test_exec( 21845,  21845, 0, 2);
+        // ram8_test_exec( 21845,  21845, 0, 3);
+        // ram8_test_exec( 21845,  21845, 0, 4);
+        // ram8_test_exec( 21845,  21845, 0, 5);
+        // ram8_test_exec( 21845,  21845, 0, 6);
+        // ram8_test_exec( 21845,  21845, 0, 7);
     }
 }
