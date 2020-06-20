@@ -1,290 +1,127 @@
 use crate::bool_logic;
 use std::convert::{TryFrom};
 
-static mut CLOCK: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_0: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_1: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_2: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_3: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_4: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_5: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_6: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_7: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_8: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_9: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_10: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_11: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_12: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_13: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_14: u8 = 0;
-static mut STOCKED_BEFORE_DFF_INPUT_15: u8 = 0;
-
 #[allow(dead_code)]
 pub fn entry_point() {
     println!("in sequential_logic mod entry_point");
 }
 
-fn tick_tock() {
-    unsafe { CLOCK += 1; }
+struct Dff {
+    pre_value: u8
 }
 
-fn dff0(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_0 };
-    // 今回入力値はグローバル変数に格納して次のクロックで利用する
-    unsafe {
-        STOCKED_BEFORE_DFF_INPUT_0 = input
+impl Dff {
+    fn new(init_status: u8) -> Dff {
+        Dff {
+            pre_value: init_status
+        }
     }
-    output
+    fn exec(&mut self, change: u8) -> u8 {
+        let result = self.pre_value;
+        self.pre_value = change;
+        result
+    }
 }
 
-fn dff1(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_1 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_1 = input }
-    output
+struct Bit {
+    dff: Dff
 }
 
-fn dff2(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_2 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_2 = input }
-    output
+impl Bit {
+    fn new() -> Bit {
+        Bit {
+            dff: Dff::new(0)
+        }
+    }
+    fn exec(&mut self, input: u8, load: u8) -> u8 {
+        let value = bool_logic::mux(self.dff.pre_value, input, load);
+        self.dff.exec(value)
+    }
 }
 
-fn dff3(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_3 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_3 = input }
-    output
+struct Register {
+    bits: [Bit; 16]
 }
 
-fn dff4(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_4 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_4 = input }
-    output
+impl Register {
+    fn new() -> Register {
+        Register {
+            bits: [
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+                Bit::new(),
+            ]
+        }
+    }
+    fn exec(&mut self, input_arr: &[u8; 16], load: u8) -> [u8; 16] {
+        [
+            self.bits[0].exec(input_arr[0], load),
+            self.bits[1].exec(input_arr[1], load),
+            self.bits[2].exec(input_arr[2], load),
+            self.bits[3].exec(input_arr[3], load),
+            self.bits[4].exec(input_arr[4], load),
+            self.bits[5].exec(input_arr[5], load),
+            self.bits[6].exec(input_arr[6], load),
+            self.bits[7].exec(input_arr[7], load),
+            self.bits[8].exec(input_arr[8], load),
+            self.bits[9].exec(input_arr[9], load),
+            self.bits[10].exec(input_arr[10], load),
+            self.bits[11].exec(input_arr[11], load),
+            self.bits[12].exec(input_arr[12], load),
+            self.bits[13].exec(input_arr[13], load),
+            self.bits[14].exec(input_arr[14], load),
+            self.bits[15].exec(input_arr[15], load),
+        ]
+    }
 }
 
-fn dff5(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_5 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_5 = input }
-    output
+struct Ram8 {
+    registers: [Register; 8]
 }
 
-fn dff6(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_6 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_6 = input }
-    output
-}
-
-fn dff7(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_7 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_7 = input }
-    output
-}
-
-fn dff8(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_8 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_8 = input }
-    output
-}
-
-fn dff9(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_9 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_9 = input }
-    output
-}
-
-fn dff10(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_10 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_10 = input }
-    output
-}
-
-fn dff11(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_11 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_11 = input }
-    output
-}
-
-fn dff12(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_12 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_12 = input }
-    output
-}
-
-fn dff13(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_13 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_13 = input }
-    output
-}
-
-fn dff14(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_14 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_14 = input }
-    output
-}
-
-fn dff15(input: u8) -> u8 {
-    let output: u8 = unsafe { STOCKED_BEFORE_DFF_INPUT_15 };
-    unsafe { STOCKED_BEFORE_DFF_INPUT_15 = input }
-    output
-}
-
-fn bit0(input: u8, load: u8) -> u8 {
-    // ex
-    // let mut output: u8 = 0;
-    //
-    // ここの選択をマルチプレクサでおこなう
-    // if unsafe { STOCKED_BEFORE_BIT_LOAD } == 1 {
-    //     unsafe { output = STOCKED_BEFORE_BIT_INPUT }
-    // } else {
-    //     unsafe { output = STOCKED_BEFORE_BIT_OUTPUT }
-    // }
-    //
-    // ここの1回前の情報をdffに入れる
-    // unsafe {
-    //     STOCKED_BEFORE_BIT_INPUT = input;
-    //     STOCKED_BEFORE_BIT_OUTPUT = output;
-    //     STOCKED_BEFORE_BIT_LOAD = load;
-    // }
-    // output
-
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_0 }, input, load);
-    let output: u8 = dff0(mux_out);
-    output
-}
-
-fn bit1(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_1 }, input, load);
-    let output: u8 = dff1(mux_out);
-    output
-}
-
-fn bit2(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_2 }, input, load);
-    let output: u8 = dff2(mux_out);
-    output
-}
-
-fn bit3(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_3 }, input, load);
-    let output: u8 = dff3(mux_out);
-    output
-}
-
-fn bit4(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_4 }, input, load);
-    let output: u8 = dff4(mux_out);
-    output
-}
-
-fn bit5(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_5 }, input, load);
-    let output: u8 = dff5(mux_out);
-    output
-}
-
-fn bit6(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_6 }, input, load);
-    let output: u8 = dff6(mux_out);
-    output
-}
-
-fn bit7(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_7 }, input, load);
-    let output: u8 = dff7(mux_out);
-    output
-}
-
-fn bit8(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_8 }, input, load);
-    let output: u8 = dff8(mux_out);
-    output
-}
-
-fn bit9(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_9 }, input, load);
-    let output: u8 = dff9(mux_out);
-    output
-}
-
-fn bit10(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_10 }, input, load);
-    let output: u8 = dff10(mux_out);
-    output
-}
-
-fn bit11(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_11 }, input, load);
-    let output: u8 = dff11(mux_out);
-    output
-}
-
-fn bit12(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_12 }, input, load);
-    let output: u8 = dff12(mux_out);
-    output
-}
-
-fn bit13(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_13 }, input, load);
-    let output: u8 = dff13(mux_out);
-    output
-}
-
-fn bit14(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_14 }, input, load);
-    let output: u8 = dff14(mux_out);
-    output
-}
-
-fn bit15(input: u8, load: u8) -> u8 {
-    let mux_out: u8 = bool_logic::mux(unsafe { STOCKED_BEFORE_DFF_INPUT_15 }, input, load);
-    let output: u8 = dff15(mux_out);
-    output
-}
-
-fn register(input_arr: &[u8; 16], load: u8) -> [u8; 16] {
-    let mut output: [u8; 16] = [0; 16];
-    output[0]  = bit0( input_arr[0],  load);
-    output[1]  = bit1( input_arr[1],  load);
-    output[2]  = bit2( input_arr[2],  load);
-    output[3]  = bit3( input_arr[3],  load);
-    output[4]  = bit4( input_arr[4],  load);
-    output[5]  = bit5( input_arr[5],  load);
-    output[6]  = bit6( input_arr[6],  load);
-    output[7]  = bit7( input_arr[7],  load);
-    output[8]  = bit8( input_arr[8],  load);
-    output[9]  = bit9( input_arr[9],  load);
-    output[10] = bit10(input_arr[10], load);
-    output[11] = bit11(input_arr[11], load);
-    output[12] = bit12(input_arr[12], load);
-    output[13] = bit13(input_arr[13], load);
-    output[14] = bit14(input_arr[14], load);
-    output[15] = bit15(input_arr[15], load);
-    output
-}
-
-fn ram8(input_arr: &[u8; 16], load: u8, address: &[u8; 3]) -> [u8; 16] {
-    let address_load = bool_logic::dmux_8way(load, address);
-
-    let reg0 = register(input_arr, address_load[0]);
-    let reg1 = register(input_arr, address_load[1]);
-    let reg2 = register(input_arr, address_load[2]);
-    let reg3 = register(input_arr, address_load[3]);
-    let reg4 = register(input_arr, address_load[4]);
-    let reg5 = register(input_arr, address_load[5]);
-    let reg6 = register(input_arr, address_load[6]);
-    let reg7 = register(input_arr, address_load[7]);
-
-    bool_logic::mux_8way_16bit(
-        &reg0,
-        &reg1,
-        &reg2,
-        &reg3,
-        &reg4,
-        &reg5,
-        &reg6,
-        &reg7,
-        &address,
-    )
+impl Ram8 {
+    fn new() -> Ram8 {
+        Ram8 {
+            registers: [
+                Register::new(),
+                Register::new(),
+                Register::new(),
+                Register::new(),
+                Register::new(),
+                Register::new(),
+                Register::new(),
+                Register::new(),
+            ]
+        }
+    }
+    fn exec(&mut self, input_arr: &[u8; 16], load: u8, address: &[u8; 3]) -> [u8; 16] {
+        let selector = bool_logic::dmux_8way(load, address);
+        println!("{:?} {:?} {:?}",load, address, selector);
+        bool_logic::mux_8way_16bit(
+            &self.registers[0].exec(input_arr, selector[0]),
+            &self.registers[1].exec(input_arr, selector[1]),
+            &self.registers[2].exec(input_arr, selector[2]),
+            &self.registers[3].exec(input_arr, selector[3]),
+            &self.registers[4].exec(input_arr, selector[4]),
+            &self.registers[5].exec(input_arr, selector[5]),
+            &self.registers[6].exec(input_arr, selector[6]),
+            &self.registers[7].exec(input_arr, selector[7]),
+            address
+        )
+    }
 }
 
 #[cfg(test)]
@@ -311,13 +148,7 @@ mod test {
         output
     }
 
-    fn bit_test_exec(expect: u8, input: u8, load: u8) {
-        tick_tock();
-        assert_eq!(expect, bit0(input, load));
-    }
-
-    fn register_test_exec(expect: i16, input: i16, load: u8) {
-        tick_tock();
+    fn register_test_exec(expect: i16, input: i16, load: u8, register: &mut Register) {
         // .cpmファイルが10進数で記載されているのでビット列に変換してから比較する
         // expect
         let formatted_expect: String = format!("{:0b}", expect);
@@ -326,11 +157,393 @@ mod test {
         let formatted_input: String = format!("{:0b}", input);
         let input_arr: [u8; 16] = converter_16bit_to_array(&formatted_input);
 
-        assert_eq!(expect_arr, register(&input_arr, load));
+        assert_eq!(expect_arr, register.exec(&input_arr, load));
     }
 
-    fn ram8_test_exec(expect: i16, input: i16, load: u8, address: u8) {
-        tick_tock();
+    #[test]
+    fn dff_test() {
+        let mut dff: Dff = Dff::new(0);
+        assert_eq!(0, dff.exec(1));
+        assert_eq!(1, dff.exec(0));
+        assert_eq!(0, dff.exec(0));
+        assert_eq!(0, dff.exec(1));
+        assert_eq!(1, dff.exec(1));
+        assert_eq!(1, dff.exec(1));
+    }
+
+    #[test]
+    fn bit_test() {
+        let mut bit: Bit = Bit::new();
+        assert_eq!(0, bit.exec(0, 0));
+        assert_eq!(0, bit.exec(0, 0));
+        assert_eq!(0, bit.exec(0, 1));
+        assert_eq!(0, bit.exec(0, 1));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 1));
+        assert_eq!(1, bit.exec(1, 1));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(1, 0));
+        assert_eq!(1, bit.exec(1, 0));
+        assert_eq!(1, bit.exec(0, 1));
+        assert_eq!(0, bit.exec(0, 1));
+        assert_eq!(0, bit.exec(1, 1));
+        assert_eq!(1, bit.exec(1, 1));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 0));
+        assert_eq!(1, bit.exec(0, 1));
+        assert_eq!(0, bit.exec(0, 1));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+        assert_eq!(0, bit.exec(1, 0));
+    }
+
+    #[test]
+    fn register_test() {
+        let mut register = Register::new();
+        register_test_exec(     0,      0 , 0, &mut register);
+        register_test_exec(     0,      0 , 0, &mut register);
+        register_test_exec(     0,      0 , 1, &mut register);
+        register_test_exec(     0,      0 , 1, &mut register);
+        register_test_exec(     0, -32123 , 0, &mut register);
+        register_test_exec(     0, -32123 , 0, &mut register);
+        register_test_exec(     0,  11111 , 0, &mut register);
+        register_test_exec(     0,  11111 , 0, &mut register);
+        register_test_exec(     0, -32123 , 1, &mut register);
+        register_test_exec(-32123, -32123 , 1, &mut register);
+        register_test_exec(-32123, -32123 , 1, &mut register);
+        register_test_exec(-32123, -32123 , 1, &mut register);
+        register_test_exec(-32123, -32123 , 0, &mut register);
+        register_test_exec(-32123, -32123 , 0, &mut register);
+        register_test_exec(-32123,  12345 , 1, &mut register);
+        register_test_exec( 12345,  12345 , 1, &mut register);
+        register_test_exec( 12345,      0 , 0, &mut register);
+        register_test_exec( 12345,      0 , 0, &mut register);
+        register_test_exec( 12345,      0 , 1, &mut register);
+        register_test_exec(     0,      0 , 1, &mut register);
+        register_test_exec(     0,      1 , 0, &mut register);
+        register_test_exec(     0,      1 , 0, &mut register);
+        register_test_exec(     0,      1 , 1, &mut register);
+        register_test_exec(     1,      1 , 1, &mut register);
+        register_test_exec(     1,      2 , 0, &mut register);
+        register_test_exec(     1,      2 , 0, &mut register);
+        register_test_exec(     1,      2 , 1, &mut register);
+        register_test_exec(     2,      2 , 1, &mut register);
+        register_test_exec(     2,      4 , 0, &mut register);
+        register_test_exec(     2,      4 , 0, &mut register);
+        register_test_exec(     2,      4 , 1, &mut register);
+        register_test_exec(     4,      4 , 1, &mut register);
+        register_test_exec(     4,      8 , 0, &mut register);
+        register_test_exec(     4,      8 , 0, &mut register);
+        register_test_exec(     4,      8 , 1, &mut register);
+        register_test_exec(     8,      8 , 1, &mut register);
+        register_test_exec(     8,     16 , 0, &mut register);
+        register_test_exec(     8,     16 , 0, &mut register);
+        register_test_exec(     8,     16 , 1, &mut register);
+        register_test_exec(    16,     16 , 1, &mut register);
+        register_test_exec(    16,     32 , 0, &mut register);
+        register_test_exec(    16,     32 , 0, &mut register);
+        register_test_exec(    16,     32 , 1, &mut register);
+        register_test_exec(    32,     32 , 1, &mut register);
+        register_test_exec(    32,     64 , 0, &mut register);
+        register_test_exec(    32,     64 , 0, &mut register);
+        register_test_exec(    32,     64 , 1, &mut register);
+        register_test_exec(    64,     64 , 1, &mut register);
+        register_test_exec(    64,    128 , 0, &mut register);
+        register_test_exec(    64,    128 , 0, &mut register);
+        register_test_exec(    64,    128 , 1, &mut register);
+        register_test_exec(   128,    128 , 1, &mut register);
+        register_test_exec(   128,    256 , 0, &mut register);
+        register_test_exec(   128,    256 , 0, &mut register);
+        register_test_exec(   128,    256 , 1, &mut register);
+        register_test_exec(   256,    256 , 1, &mut register);
+        register_test_exec(   256,    512 , 0, &mut register);
+        register_test_exec(   256,    512 , 0, &mut register);
+        register_test_exec(   256,    512 , 1, &mut register);
+        register_test_exec(   512,    512 , 1, &mut register);
+        register_test_exec(   512,   1024 , 0, &mut register);
+        register_test_exec(   512,   1024 , 0, &mut register);
+        register_test_exec(   512,   1024 , 1, &mut register);
+        register_test_exec(  1024,   1024 , 1, &mut register);
+        register_test_exec(  1024,   2048 , 0, &mut register);
+        register_test_exec(  1024,   2048 , 0, &mut register);
+        register_test_exec(  1024,   2048 , 1, &mut register);
+        register_test_exec(  2048,   2048 , 1, &mut register);
+        register_test_exec(  2048,   4096 , 0, &mut register);
+        register_test_exec(  2048,   4096 , 0, &mut register);
+        register_test_exec(  2048,   4096 , 1, &mut register);
+        register_test_exec(  4096,   4096 , 1, &mut register);
+        register_test_exec(  4096,   8192 , 0, &mut register);
+        register_test_exec(  4096,   8192 , 0, &mut register);
+        register_test_exec(  4096,   8192 , 1, &mut register);
+        register_test_exec(  8192,   8192 , 1, &mut register);
+        register_test_exec(  8192,  16384 , 0, &mut register);
+        register_test_exec(  8192,  16384 , 0, &mut register);
+        register_test_exec(  8192,  16384 , 1, &mut register);
+        register_test_exec( 16384,  16384 , 1, &mut register);
+        register_test_exec( 16384, -32768 , 0, &mut register);
+        register_test_exec( 16384, -32768 , 0, &mut register);
+        register_test_exec( 16384, -32768 , 1, &mut register);
+        register_test_exec(-32768, -32768 , 1, &mut register);
+        register_test_exec(-32768,     -2 , 0, &mut register);
+        register_test_exec(-32768,     -2 , 0, &mut register);
+        register_test_exec(-32768,     -2 , 1, &mut register);
+        register_test_exec(    -2,     -2 , 1, &mut register);
+        register_test_exec(    -2,     -3 , 0, &mut register);
+        register_test_exec(    -2,     -3 , 0, &mut register);
+        register_test_exec(    -2,     -3 , 1, &mut register);
+        register_test_exec(    -3,     -3 , 1, &mut register);
+        register_test_exec(    -3,     -5 , 0, &mut register);
+        register_test_exec(    -3,     -5 , 0, &mut register);
+        register_test_exec(    -3,     -5 , 1, &mut register);
+        register_test_exec(    -5,     -5 , 1, &mut register);
+        register_test_exec(    -5,     -9 , 0, &mut register);
+        register_test_exec(    -5,     -9 , 0, &mut register);
+        register_test_exec(    -5,     -9 , 1, &mut register);
+        register_test_exec(    -9,     -9 , 1, &mut register);
+        register_test_exec(    -9,    -17 , 0, &mut register);
+        register_test_exec(    -9,    -17 , 0, &mut register);
+        register_test_exec(    -9,    -17 , 1, &mut register);
+        register_test_exec(   -17,    -17 , 1, &mut register);
+        register_test_exec(   -17,    -33 , 0, &mut register);
+        register_test_exec(   -17,    -33 , 0, &mut register);
+        register_test_exec(   -17,    -33 , 1, &mut register);
+        register_test_exec(   -33,    -33 , 1, &mut register);
+        register_test_exec(   -33,    -65 , 0, &mut register);
+        register_test_exec(   -33,    -65 , 0, &mut register);
+        register_test_exec(   -33,    -65 , 1, &mut register);
+        register_test_exec(   -65,    -65 , 1, &mut register);
+        register_test_exec(   -65,   -129 , 0, &mut register);
+        register_test_exec(   -65,   -129 , 0, &mut register);
+        register_test_exec(   -65,   -129 , 1, &mut register);
+        register_test_exec(  -129,   -129 , 1, &mut register);
+        register_test_exec(  -129,   -257 , 0, &mut register);
+        register_test_exec(  -129,   -257 , 0, &mut register);
+        register_test_exec(  -129,   -257 , 1, &mut register);
+        register_test_exec(  -257,   -257 , 1, &mut register);
+        register_test_exec(  -257,   -513 , 0, &mut register);
+        register_test_exec(  -257,   -513 , 0, &mut register);
+        register_test_exec(  -257,   -513 , 1, &mut register);
+        register_test_exec(  -513,   -513 , 1, &mut register);
+        register_test_exec(  -513,  -1025 , 0, &mut register);
+        register_test_exec(  -513,  -1025 , 0, &mut register);
+        register_test_exec(  -513,  -1025 , 1, &mut register);
+        register_test_exec( -1025,  -1025 , 1, &mut register);
+        register_test_exec( -1025,  -2049 , 0, &mut register);
+        register_test_exec( -1025,  -2049 , 0, &mut register);
+        register_test_exec( -1025,  -2049 , 1, &mut register);
+        register_test_exec( -2049,  -2049 , 1, &mut register);
+        register_test_exec( -2049,  -4097 , 0, &mut register);
+        register_test_exec( -2049,  -4097 , 0, &mut register);
+        register_test_exec( -2049,  -4097 , 1, &mut register);
+        register_test_exec( -4097,  -4097 , 1, &mut register);
+        register_test_exec( -4097,  -8193 , 0, &mut register);
+        register_test_exec( -4097,  -8193 , 0, &mut register);
+        register_test_exec( -4097,  -8193 , 1, &mut register);
+        register_test_exec( -8193,  -8193 , 1, &mut register);
+        register_test_exec( -8193, -16385 , 0, &mut register);
+        register_test_exec( -8193, -16385 , 0, &mut register);
+        register_test_exec( -8193, -16385 , 1, &mut register);
+        register_test_exec(-16385, -16385 , 1, &mut register);
+        register_test_exec(-16385,  32767 , 0, &mut register);
+        register_test_exec(-16385,  32767 , 0, &mut register);
+        register_test_exec(-16385,  32767 , 1, &mut register);
+        register_test_exec( 32767,  32767 , 1, &mut register);
+    }
+
+    fn ram8_test_exec(expect: i16, input: i16, load: u8, address: u8, ram8: &mut Ram8) {
         // .cpmファイルが10進数で記載されているのでビット列に変換してから比較する
         // expect
         let formatted_expect: String = format!("{:0b}", expect);
@@ -339,581 +552,186 @@ mod test {
         let formatted_input: String = format!("{:0b}", input);
         let input_arr: [u8; 16] = converter_16bit_to_array(&formatted_input);
         // address
-        let formatted_address: String = format!("{:0b}", address);
+        let pre_formatted_address: String = format!("{:0b}", address);
+        let formatted_address: String = format!("{:0>3}",pre_formatted_address);
         let address_arr: [u8; 3] = converter_3bit_to_array(&formatted_address);
-        assert_eq!(expect_arr, ram8(&input_arr, load, &address_arr));
-    }
 
-    #[test]
-    fn bit_test() {
-        bit_test_exec(0, 0, 0);
-        bit_test_exec(0, 0, 0);
-        bit_test_exec(0, 0, 1);
-        bit_test_exec(0, 0, 1);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 1);
-        bit_test_exec(1, 1, 1);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 1, 0);
-        bit_test_exec(1, 1, 0);
-        bit_test_exec(1, 0, 1);
-        bit_test_exec(0, 0, 1);
-        bit_test_exec(0, 1, 1);
-        bit_test_exec(1, 1, 1);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 0);
-        bit_test_exec(1, 0, 1);
-        bit_test_exec(0, 0, 1);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-        bit_test_exec(0, 1, 0);
-
-        // teardown
-        unsafe {
-            CLOCK = 0;
-            STOCKED_BEFORE_DFF_INPUT_0 = 0;
-        }
-    }
-
-    #[test]
-    fn register_test() {
-        register_test_exec(     0,      0 , 0);
-        register_test_exec(     0,      0 , 0);
-        register_test_exec(     0,      0 , 1);
-        register_test_exec(     0,      0 , 1);
-        register_test_exec(     0, -32123 , 0);
-        register_test_exec(     0, -32123 , 0);
-        register_test_exec(     0,  11111 , 0);
-        register_test_exec(     0,  11111 , 0);
-        register_test_exec(     0, -32123 , 1);
-        register_test_exec(-32123, -32123 , 1);
-        register_test_exec(-32123, -32123 , 1);
-        register_test_exec(-32123, -32123 , 1);
-        register_test_exec(-32123, -32123 , 0);
-        register_test_exec(-32123, -32123 , 0);
-        register_test_exec(-32123,  12345 , 1);
-        register_test_exec( 12345,  12345 , 1);
-        register_test_exec( 12345,      0 , 0);
-        register_test_exec( 12345,      0 , 0);
-        register_test_exec( 12345,      0 , 1);
-        register_test_exec(     0,      0 , 1);
-        register_test_exec(     0,      1 , 0);
-        register_test_exec(     0,      1 , 0);
-        register_test_exec(     0,      1 , 1);
-        register_test_exec(     1,      1 , 1);
-        register_test_exec(     1,      2 , 0);
-        register_test_exec(     1,      2 , 0);
-        register_test_exec(     1,      2 , 1);
-        register_test_exec(     2,      2 , 1);
-        register_test_exec(     2,      4 , 0);
-        register_test_exec(     2,      4 , 0);
-        register_test_exec(     2,      4 , 1);
-        register_test_exec(     4,      4 , 1);
-        register_test_exec(     4,      8 , 0);
-        register_test_exec(     4,      8 , 0);
-        register_test_exec(     4,      8 , 1);
-        register_test_exec(     8,      8 , 1);
-        register_test_exec(     8,     16 , 0);
-        register_test_exec(     8,     16 , 0);
-        register_test_exec(     8,     16 , 1);
-        register_test_exec(    16,     16 , 1);
-        register_test_exec(    16,     32 , 0);
-        register_test_exec(    16,     32 , 0);
-        register_test_exec(    16,     32 , 1);
-        register_test_exec(    32,     32 , 1);
-        register_test_exec(    32,     64 , 0);
-        register_test_exec(    32,     64 , 0);
-        register_test_exec(    32,     64 , 1);
-        register_test_exec(    64,     64 , 1);
-        register_test_exec(    64,    128 , 0);
-        register_test_exec(    64,    128 , 0);
-        register_test_exec(    64,    128 , 1);
-        register_test_exec(   128,    128 , 1);
-        register_test_exec(   128,    256 , 0);
-        register_test_exec(   128,    256 , 0);
-        register_test_exec(   128,    256 , 1);
-        register_test_exec(   256,    256 , 1);
-        register_test_exec(   256,    512 , 0);
-        register_test_exec(   256,    512 , 0);
-        register_test_exec(   256,    512 , 1);
-        register_test_exec(   512,    512 , 1);
-        register_test_exec(   512,   1024 , 0);
-        register_test_exec(   512,   1024 , 0);
-        register_test_exec(   512,   1024 , 1);
-        register_test_exec(  1024,   1024 , 1);
-        register_test_exec(  1024,   2048 , 0);
-        register_test_exec(  1024,   2048 , 0);
-        register_test_exec(  1024,   2048 , 1);
-        register_test_exec(  2048,   2048 , 1);
-        register_test_exec(  2048,   4096 , 0);
-        register_test_exec(  2048,   4096 , 0);
-        register_test_exec(  2048,   4096 , 1);
-        register_test_exec(  4096,   4096 , 1);
-        register_test_exec(  4096,   8192 , 0);
-        register_test_exec(  4096,   8192 , 0);
-        register_test_exec(  4096,   8192 , 1);
-        register_test_exec(  8192,   8192 , 1);
-        register_test_exec(  8192,  16384 , 0);
-        register_test_exec(  8192,  16384 , 0);
-        register_test_exec(  8192,  16384 , 1);
-        register_test_exec( 16384,  16384 , 1);
-        register_test_exec( 16384, -32768 , 0);
-        register_test_exec( 16384, -32768 , 0);
-        register_test_exec( 16384, -32768 , 1);
-        register_test_exec(-32768, -32768 , 1);
-        register_test_exec(-32768,     -2 , 0);
-        register_test_exec(-32768,     -2 , 0);
-        register_test_exec(-32768,     -2 , 1);
-        register_test_exec(    -2,     -2 , 1);
-        register_test_exec(    -2,     -3 , 0);
-        register_test_exec(    -2,     -3 , 0);
-        register_test_exec(    -2,     -3 , 1);
-        register_test_exec(    -3,     -3 , 1);
-        register_test_exec(    -3,     -5 , 0);
-        register_test_exec(    -3,     -5 , 0);
-        register_test_exec(    -3,     -5 , 1);
-        register_test_exec(    -5,     -5 , 1);
-        register_test_exec(    -5,     -9 , 0);
-        register_test_exec(    -5,     -9 , 0);
-        register_test_exec(    -5,     -9 , 1);
-        register_test_exec(    -9,     -9 , 1);
-        register_test_exec(    -9,    -17 , 0);
-        register_test_exec(    -9,    -17 , 0);
-        register_test_exec(    -9,    -17 , 1);
-        register_test_exec(   -17,    -17 , 1);
-        register_test_exec(   -17,    -33 , 0);
-        register_test_exec(   -17,    -33 , 0);
-        register_test_exec(   -17,    -33 , 1);
-        register_test_exec(   -33,    -33 , 1);
-        register_test_exec(   -33,    -65 , 0);
-        register_test_exec(   -33,    -65 , 0);
-        register_test_exec(   -33,    -65 , 1);
-        register_test_exec(   -65,    -65 , 1);
-        register_test_exec(   -65,   -129 , 0);
-        register_test_exec(   -65,   -129 , 0);
-        register_test_exec(   -65,   -129 , 1);
-        register_test_exec(  -129,   -129 , 1);
-        register_test_exec(  -129,   -257 , 0);
-        register_test_exec(  -129,   -257 , 0);
-        register_test_exec(  -129,   -257 , 1);
-        register_test_exec(  -257,   -257 , 1);
-        register_test_exec(  -257,   -513 , 0);
-        register_test_exec(  -257,   -513 , 0);
-        register_test_exec(  -257,   -513 , 1);
-        register_test_exec(  -513,   -513 , 1);
-        register_test_exec(  -513,  -1025 , 0);
-        register_test_exec(  -513,  -1025 , 0);
-        register_test_exec(  -513,  -1025 , 1);
-        register_test_exec( -1025,  -1025 , 1);
-        register_test_exec( -1025,  -2049 , 0);
-        register_test_exec( -1025,  -2049 , 0);
-        register_test_exec( -1025,  -2049 , 1);
-        register_test_exec( -2049,  -2049 , 1);
-        register_test_exec( -2049,  -4097 , 0);
-        register_test_exec( -2049,  -4097 , 0);
-        register_test_exec( -2049,  -4097 , 1);
-        register_test_exec( -4097,  -4097 , 1);
-        register_test_exec( -4097,  -8193 , 0);
-        register_test_exec( -4097,  -8193 , 0);
-        register_test_exec( -4097,  -8193 , 1);
-        register_test_exec( -8193,  -8193 , 1);
-        register_test_exec( -8193, -16385 , 0);
-        register_test_exec( -8193, -16385 , 0);
-        register_test_exec( -8193, -16385 , 1);
-        register_test_exec(-16385, -16385 , 1);
-        register_test_exec(-16385,  32767 , 0);
-        register_test_exec(-16385,  32767 , 0);
-        register_test_exec(-16385,  32767 , 1);
-        register_test_exec( 32767,  32767 , 1);
-
-        // teardown
-        unsafe {
-            CLOCK = 0;
-            STOCKED_BEFORE_DFF_INPUT_0 = 0;
-            STOCKED_BEFORE_DFF_INPUT_1 = 0;
-            STOCKED_BEFORE_DFF_INPUT_2 = 0;
-            STOCKED_BEFORE_DFF_INPUT_3 = 0;
-            STOCKED_BEFORE_DFF_INPUT_4 = 0;
-            STOCKED_BEFORE_DFF_INPUT_5 = 0;
-            STOCKED_BEFORE_DFF_INPUT_6 = 0;
-            STOCKED_BEFORE_DFF_INPUT_7 = 0;
-            STOCKED_BEFORE_DFF_INPUT_8 = 0;
-            STOCKED_BEFORE_DFF_INPUT_9 = 0;
-            STOCKED_BEFORE_DFF_INPUT_10 = 0;
-            STOCKED_BEFORE_DFF_INPUT_11 = 0;
-            STOCKED_BEFORE_DFF_INPUT_12 = 0;
-            STOCKED_BEFORE_DFF_INPUT_13 = 0;
-            STOCKED_BEFORE_DFF_INPUT_14 = 0;
-            STOCKED_BEFORE_DFF_INPUT_15 = 0;
-        }
+        assert_eq!(expect_arr, ram8.exec(&input_arr, load, &address_arr));
     }
 
     #[test]
     fn ram8_test() {
-        ram8_test_exec(     0,      0, 0, 0);
-        ram8_test_exec(     0,      0, 0, 0);
-        ram8_test_exec(     0,      0, 1, 0);
-        ram8_test_exec(     0,      0, 1, 0);
-        ram8_test_exec(     0,  11111, 0, 0);
-        ram8_test_exec(     0,  11111, 0, 0);
-        // ram8_test_exec(     0,  11111, 1, 1);
-        // ram8_test_exec( 11111,  11111, 1, 1);
-        // ram8_test_exec(     0,  11111, 0, 0);
-        // ram8_test_exec(     0,  11111, 0, 0);
-        // ram8_test_exec(     0,   3333, 0, 3);
-        // ram8_test_exec(     0,   3333, 0, 3);
-        // ram8_test_exec(     0,   3333, 1, 3);
-        // ram8_test_exec(  3333,   3333, 1, 3);
-        // ram8_test_exec(  3333,   3333, 0, 3);
-        // ram8_test_exec(  3333,   3333, 0, 3);
-        // ram8_test_exec( 11111,   3333, 0, 1);
-        // ram8_test_exec( 11111,   7777, 0, 1);
-        // ram8_test_exec( 11111,   7777, 0, 1);
-        // ram8_test_exec(     0,   7777, 1, 7);
-        // ram8_test_exec(  7777,   7777, 1, 7);
-        // ram8_test_exec(  7777,   7777, 0, 7);
-        // ram8_test_exec(  7777,   7777, 0, 7);
-        // ram8_test_exec(  3333,   7777, 0, 3);
-        // ram8_test_exec(  7777,   7777, 0, 7);
-        // ram8_test_exec(     0,   7777, 0, 0);
-        // ram8_test_exec(     0,   7777, 0, 0);
-        // ram8_test_exec( 11111,   7777, 0, 1);
-        // ram8_test_exec(     0,   7777, 0, 2);
-        // ram8_test_exec(  3333,   7777, 0, 3);
-        // ram8_test_exec(     0,   7777, 0, 4);
-        // ram8_test_exec(     0,   7777, 0, 5);
-        // ram8_test_exec(     0,   7777, 0, 6);
-        // ram8_test_exec(  7777,   7777, 0, 7);
-        // ram8_test_exec(     0,  21845, 1, 0);
-        // ram8_test_exec( 21845,  21845, 1, 0);
-        // ram8_test_exec( 11111,  21845, 1, 1);
-        // ram8_test_exec( 21845,  21845, 1, 1);
-        // ram8_test_exec(     0,  21845, 1, 2);
-        // ram8_test_exec( 21845,  21845, 1, 2);
-        // ram8_test_exec(  3333,  21845, 1, 3);
-        // ram8_test_exec( 21845,  21845, 1, 3);
-        // ram8_test_exec(     0,  21845, 1, 4);
-        // ram8_test_exec( 21845,  21845, 1, 4);
-        // ram8_test_exec(     0,  21845, 1, 5);
-        // ram8_test_exec( 21845,  21845, 1, 5);
-        // ram8_test_exec(     0,  21845, 1, 6);
-        // ram8_test_exec( 21845,  21845, 1, 6);
-        // ram8_test_exec(  7777,  21845, 1, 7);
-        // ram8_test_exec( 21845,  21845, 1, 7);
-        // ram8_test_exec( 21845,  21845, 0, 0);
-        // ram8_test_exec( 21845,  21845, 0, 0);
-        // ram8_test_exec( 21845,  21845, 0, 1);
-        // ram8_test_exec( 21845,  21845, 0, 2);
-        // ram8_test_exec( 21845,  21845, 0, 3);
-        // ram8_test_exec( 21845,  21845, 0, 4);
-        // ram8_test_exec( 21845,  21845, 0, 5);
-        // ram8_test_exec( 21845,  21845, 0, 6);
-        // ram8_test_exec( 21845,  21845, 0, 7);
-        // ram8_test_exec( 21845, -21846, 1, 0);
-        // ram8_test_exec(-21846, -21846, 1, 0);
-        // ram8_test_exec(-21846, -21846, 0, 0);
-        // ram8_test_exec(-21846, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 1);
-        // ram8_test_exec( 21845, -21846, 0, 2);
-        // ram8_test_exec( 21845, -21846, 0, 3);
-        // ram8_test_exec( 21845, -21846, 0, 4);
-        // ram8_test_exec( 21845, -21846, 0, 5);
-        // ram8_test_exec( 21845, -21846, 0, 6);
-        // ram8_test_exec( 21845, -21846, 0, 7);
-        // ram8_test_exec(-21846,  21845, 1, 0);
-        // ram8_test_exec( 21845,  21845, 1, 0);
-        // ram8_test_exec( 21845, -21846, 1, 1);
-        // ram8_test_exec(-21846, -21846, 1, 1);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec(-21846, -21846, 0, 1);
-        // ram8_test_exec( 21845, -21846, 0, 2);
-        // ram8_test_exec( 21845, -21846, 0, 3);
-        // ram8_test_exec( 21845, -21846, 0, 4);
-        // ram8_test_exec( 21845, -21846, 0, 5);
-        // ram8_test_exec( 21845, -21846, 0, 6);
-        // ram8_test_exec( 21845, -21846, 0, 7);
-        // ram8_test_exec(-21846,  21845, 1, 1);
-        // ram8_test_exec( 21845,  21845, 1, 1);
-        // ram8_test_exec( 21845, -21846, 1, 2);
-        // ram8_test_exec(-21846, -21846, 1, 2);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 1);
-        // ram8_test_exec(-21846, -21846, 0, 2);
-        // ram8_test_exec( 21845, -21846, 0, 3);
-        // ram8_test_exec( 21845, -21846, 0, 4);
-        // ram8_test_exec( 21845, -21846, 0, 5);
-        // ram8_test_exec( 21845, -21846, 0, 6);
-        // ram8_test_exec( 21845, -21846, 0, 7);
-        // ram8_test_exec(-21846,  21845, 1, 2);
-        // ram8_test_exec( 21845,  21845, 1, 2);
-        // ram8_test_exec( 21845, -21846, 1, 3);
-        // ram8_test_exec(-21846, -21846, 1, 3);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 1);
-        // ram8_test_exec( 21845, -21846, 0, 2);
-        // ram8_test_exec(-21846, -21846, 0, 3);
-        // ram8_test_exec( 21845, -21846, 0, 4);
-        // ram8_test_exec( 21845, -21846, 0, 5);
-        // ram8_test_exec( 21845, -21846, 0, 6);
-        // ram8_test_exec( 21845, -21846, 0, 7);
-        // ram8_test_exec(-21846,  21845, 1, 3);
-        // ram8_test_exec( 21845,  21845, 1, 3);
-        // ram8_test_exec( 21845, -21846, 1, 4);
-        // ram8_test_exec(-21846, -21846, 1, 4);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 1);
-        // ram8_test_exec( 21845, -21846, 0, 2);
-        // ram8_test_exec( 21845, -21846, 0, 3);
-        // ram8_test_exec(-21846, -21846, 0, 4);
-        // ram8_test_exec( 21845, -21846, 0, 5);
-        // ram8_test_exec( 21845, -21846, 0, 6);
-        // ram8_test_exec( 21845, -21846, 0, 7);
-        // ram8_test_exec(-21846,  21845, 1, 4);
-        // ram8_test_exec( 21845,  21845, 1, 4);
-        // ram8_test_exec( 21845, -21846, 1, 5);
-        // ram8_test_exec(-21846, -21846, 1, 5);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 1);
-        // ram8_test_exec( 21845, -21846, 0, 2);
-        // ram8_test_exec( 21845, -21846, 0, 3);
-        // ram8_test_exec( 21845, -21846, 0, 4);
-        // ram8_test_exec(-21846, -21846, 0, 5);
-        // ram8_test_exec( 21845, -21846, 0, 6);
-        // ram8_test_exec( 21845, -21846, 0, 7);
-        // ram8_test_exec(-21846,  21845, 1, 5);
-        // ram8_test_exec( 21845,  21845, 1, 5);
-        // ram8_test_exec( 21845, -21846, 1, 6);
-        // ram8_test_exec(-21846, -21846, 1, 6);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 1);
-        // ram8_test_exec( 21845, -21846, 0, 2);
-        // ram8_test_exec( 21845, -21846, 0, 3);
-        // ram8_test_exec( 21845, -21846, 0, 4);
-        // ram8_test_exec( 21845, -21846, 0, 5);
-        // ram8_test_exec(-21846, -21846, 0, 6);
-        // ram8_test_exec( 21845, -21846, 0, 7);
-        // ram8_test_exec(-21846,  21845, 1, 6);
-        // ram8_test_exec( 21845,  21845, 1, 6);
-        // ram8_test_exec( 21845, -21846, 1, 7);
-        // ram8_test_exec(-21846, -21846, 1, 7);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 0);
-        // ram8_test_exec( 21845, -21846, 0, 1);
-        // ram8_test_exec( 21845, -21846, 0, 2);
-        // ram8_test_exec( 21845, -21846, 0, 3);
-        // ram8_test_exec( 21845, -21846, 0, 4);
-        // ram8_test_exec( 21845, -21846, 0, 5);
-        // ram8_test_exec( 21845, -21846, 0, 6);
-        // ram8_test_exec(-21846, -21846, 0, 7);
-        // ram8_test_exec(-21846,  21845, 1, 7);
-        // ram8_test_exec( 21845,  21845, 1, 7);
-        // ram8_test_exec( 21845,  21845, 0, 0);
-        // ram8_test_exec( 21845,  21845, 0, 0);
-        // ram8_test_exec( 21845,  21845, 0, 1);
-        // ram8_test_exec( 21845,  21845, 0, 2);
-        // ram8_test_exec( 21845,  21845, 0, 3);
-        // ram8_test_exec( 21845,  21845, 0, 4);
-        // ram8_test_exec( 21845,  21845, 0, 5);
-        // ram8_test_exec( 21845,  21845, 0, 6);
-        // ram8_test_exec( 21845,  21845, 0, 7);
+        let mut ram8 = Ram8::new();
+        ram8_test_exec(     0,      0, 0, 0, &mut ram8);
+        ram8_test_exec(     0,      0, 1, 0, &mut ram8);
+        ram8_test_exec(     0,      0, 1, 0, &mut ram8);
+        ram8_test_exec(     0,  11111, 0, 0, &mut ram8);
+        ram8_test_exec(     0,  11111, 0, 0, &mut ram8);
+        ram8_test_exec(     0,  11111, 1, 1, &mut ram8);
+        ram8_test_exec( 11111,  11111, 1, 1, &mut ram8);
+        ram8_test_exec(     0,  11111, 0, 0, &mut ram8);
+        ram8_test_exec(     0,  11111, 0, 0, &mut ram8);
+        ram8_test_exec(     0,   3333, 0, 3, &mut ram8);
+        ram8_test_exec(     0,   3333, 0, 3, &mut ram8);
+        ram8_test_exec(     0,   3333, 1, 3, &mut ram8);
+        ram8_test_exec(  3333,   3333, 1, 3, &mut ram8);
+        ram8_test_exec(  3333,   3333, 0, 3, &mut ram8);
+        ram8_test_exec(  3333,   3333, 0, 3, &mut ram8);
+        ram8_test_exec( 11111,   3333, 0, 1, &mut ram8);
+        ram8_test_exec( 11111,   7777, 0, 1, &mut ram8);
+        ram8_test_exec( 11111,   7777, 0, 1, &mut ram8);
+        ram8_test_exec(     0,   7777, 1, 7, &mut ram8);
+        ram8_test_exec(  7777,   7777, 1, 7, &mut ram8);
+        ram8_test_exec(  7777,   7777, 0, 7, &mut ram8);
+        ram8_test_exec(  7777,   7777, 0, 7, &mut ram8);
+        ram8_test_exec(  3333,   7777, 0, 3, &mut ram8);
+        ram8_test_exec(  7777,   7777, 0, 7, &mut ram8);
+        ram8_test_exec(     0,   7777, 0, 0, &mut ram8);
+        ram8_test_exec(     0,   7777, 0, 0, &mut ram8);
+        ram8_test_exec( 11111,   7777, 0, 1, &mut ram8);
+        ram8_test_exec(     0,   7777, 0, 2, &mut ram8);
+        ram8_test_exec(  3333,   7777, 0, 3, &mut ram8);
+        ram8_test_exec(     0,   7777, 0, 4, &mut ram8);
+        ram8_test_exec(     0,   7777, 0, 5, &mut ram8);
+        ram8_test_exec(     0,   7777, 0, 6, &mut ram8);
+        ram8_test_exec(  7777,   7777, 0, 7, &mut ram8);
+        ram8_test_exec(     0,  21845, 1, 0, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 0, &mut ram8);
+        ram8_test_exec( 11111,  21845, 1, 1, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 1, &mut ram8);
+        ram8_test_exec(     0,  21845, 1, 2, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 2, &mut ram8);
+        ram8_test_exec(  3333,  21845, 1, 3, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 3, &mut ram8);
+        ram8_test_exec(     0,  21845, 1, 4, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 4, &mut ram8);
+        ram8_test_exec(     0,  21845, 1, 5, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 5, &mut ram8);
+        ram8_test_exec(     0,  21845, 1, 6, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 6, &mut ram8);
+        ram8_test_exec(  7777,  21845, 1, 7, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 7, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 0, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 0, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 1, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 2, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 3, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 4, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 5, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 6, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 7, &mut ram8);
+        ram8_test_exec( 21845, -21846, 1, 0, &mut ram8);
+        ram8_test_exec(-21846, -21846, 1, 0, &mut ram8);
+        ram8_test_exec(-21846, -21846, 0, 0, &mut ram8);
+        ram8_test_exec(-21846, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 1, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 2, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 3, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 4, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 5, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 6, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 7, &mut ram8);
+        ram8_test_exec(-21846,  21845, 1, 0, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 1, 1, &mut ram8);
+        ram8_test_exec(-21846, -21846, 1, 1, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec(-21846, -21846, 0, 1, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 2, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 3, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 4, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 5, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 6, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 7, &mut ram8);
+        ram8_test_exec(-21846,  21845, 1, 1, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 1, &mut ram8);
+        ram8_test_exec( 21845, -21846, 1, 2, &mut ram8);
+        ram8_test_exec(-21846, -21846, 1, 2, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 1, &mut ram8);
+        ram8_test_exec(-21846, -21846, 0, 2, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 3, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 4, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 5, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 6, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 7, &mut ram8);
+        ram8_test_exec(-21846,  21845, 1, 2, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 2, &mut ram8);
+        ram8_test_exec( 21845, -21846, 1, 3, &mut ram8);
+        ram8_test_exec(-21846, -21846, 1, 3, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 1, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 2, &mut ram8);
+        ram8_test_exec(-21846, -21846, 0, 3, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 4, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 5, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 6, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 7, &mut ram8);
+        ram8_test_exec(-21846,  21845, 1, 3, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 3, &mut ram8);
+        ram8_test_exec( 21845, -21846, 1, 4, &mut ram8);
+        ram8_test_exec(-21846, -21846, 1, 4, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 1, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 2, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 3, &mut ram8);
+        ram8_test_exec(-21846, -21846, 0, 4, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 5, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 6, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 7, &mut ram8);
+        ram8_test_exec(-21846,  21845, 1, 4, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 4, &mut ram8);
+        ram8_test_exec( 21845, -21846, 1, 5, &mut ram8);
+        ram8_test_exec(-21846, -21846, 1, 5, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 1, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 2, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 3, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 4, &mut ram8);
+        ram8_test_exec(-21846, -21846, 0, 5, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 6, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 7, &mut ram8);
+        ram8_test_exec(-21846,  21845, 1, 5, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 5, &mut ram8);
+        ram8_test_exec( 21845, -21846, 1, 6, &mut ram8);
+        ram8_test_exec(-21846, -21846, 1, 6, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 1, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 2, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 3, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 4, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 5, &mut ram8);
+        ram8_test_exec(-21846, -21846, 0, 6, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 7, &mut ram8);
+        ram8_test_exec(-21846,  21845, 1, 6, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 6, &mut ram8);
+        ram8_test_exec( 21845, -21846, 1, 7, &mut ram8);
+        ram8_test_exec(-21846, -21846, 1, 7, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 0, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 1, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 2, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 3, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 4, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 5, &mut ram8);
+        ram8_test_exec( 21845, -21846, 0, 6, &mut ram8);
+        ram8_test_exec(-21846, -21846, 0, 7, &mut ram8);
+        ram8_test_exec(-21846,  21845, 1, 7, &mut ram8);
+        ram8_test_exec( 21845,  21845, 1, 7, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 0, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 0, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 1, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 2, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 3, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 4, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 5, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 6, &mut ram8);
+        ram8_test_exec( 21845,  21845, 0, 7, &mut ram8);
     }
 }
