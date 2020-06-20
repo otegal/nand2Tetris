@@ -29,7 +29,7 @@ fn full_adder(a: u8, b: u8, c: u8) -> HashMap<&'static str, u8> {
     result
 }
 
-fn adder_16bit(a_arr: &[u8; 16], b_arr: &[u8; 16]) -> [u8; 16] {
+pub fn adder_16bit(a_arr: &[u8; 16], b_arr: &[u8; 16]) -> [u8; 16] {
     // without overflow check
     let mut result: [u8; 16] = [0; 16];
     let mut carry: u8 = 0;
@@ -46,7 +46,7 @@ fn adder_16bit(a_arr: &[u8; 16], b_arr: &[u8; 16]) -> [u8; 16] {
     result
 }
 
-fn incrementer(a_arr: &[u8; 16]) -> [u8; 16] {
+pub fn incrementer(a_arr: &[u8; 16]) -> [u8; 16] {
     const INCREMENTER: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
 
     // without overflow check
