@@ -1,4 +1,3 @@
-use std::convert::{TryFrom};
 
 #[allow(dead_code)]
 pub fn entry_point() {
@@ -192,6 +191,7 @@ pub fn dmux_8way(input: u8, sel: &[u8; 3]) -> [u8; 8] {
 
 #[cfg(test)]
 mod test {
+    use std::convert::{TryFrom};
     use super::*;
 
     fn converter_16bit_to_array(input: &str) -> [u8; 16] {
