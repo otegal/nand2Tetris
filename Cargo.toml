@@ -1,5 +1,5 @@
 [package]
-name = "hardware_sim"
+name = "rust_nand_2_tetris"
 version = "0.1.0"
 authors = ["hhiroki <gyouzakuuka@gmail.com>"]
 edition = "2018"
