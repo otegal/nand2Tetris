@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::{BufReader, BufRead};
 
 pub mod parser;
+pub mod code;
 
 pub fn main() {
     let program_path = &env::args().nth(1);
