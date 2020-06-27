@@ -1,4 +1,5 @@
 use crate::bool_logic;
+use crate::bool_arithmetic;
 
 struct Dff {
     pre_value: u8
@@ -155,6 +156,24 @@ impl Ram64 {
     }
 }
 
+struct Pc {
+    register: Register
+}
+
+impl Pc {
+    fn new() -> Pc {
+        Pc {
+            register: Register::new()
+        }
+    }
+    fn exec(&mut self, input: &[u8; 16], load: u8, reset: u8, inc: u8) -> [u8; 16] {
+        let a = bool_arithmetic::incrementer(input);
+        let b = bool_logic::mux_16bit(input, &a, inc);
+        let c = bool_logic::mux_16bit(&b, input, load);
+        let d = bool_logic::mux_16bit(&c, &[0; 16], reset);
+        self.register.exec(&d, load)
+    }
+}
 
 #[cfg(test)]
 mod test {
@@ -241,6 +260,21 @@ mod test {
         let address_arr: [u8; 6] = converter_6bit_to_array(&formatted_address);
 
         assert_eq!(expect_arr, ram64.exec(&input_arr, load, &address_arr));
+    }
+
+    fn pc_test_exec(expect: i16, input: i16, reset: u8, load: u8, inc: u8, pc: &mut Pc) {
+        // .cpmファイルが10進数で記載されているのでビット列に変換してから比較する
+        // expect
+        let pre_formatted_expect: String = format!("{:0b}", expect);
+        let formatted_expect: String = format!("{:0>16}", pre_formatted_expect);
+        let expect_arr: [u8; 16] = converter_16bit_to_array(&formatted_expect);
+
+        // input
+        let pre_formatted_input: String = format!("{:0b}", input);
+        let formatted_input: String = format!("{:0>16}", pre_formatted_input);
+        let input_arr: [u8; 16] = converter_16bit_to_array(&formatted_input);
+
+        assert_eq!(expect_arr, pc.exec(&input_arr, reset, load, inc));
     }
 
     #[test]
@@ -1124,5 +1158,40 @@ mod test {
         ram64_test_exec( 21845,  21845, 0,  45, &mut ram64);
         ram64_test_exec( 21845,  21845, 0,  53, &mut ram64);
         ram64_test_exec( 21845,  21845, 0,  61, &mut ram64);
+    }
+
+    // #[test]
+    fn pc_test() {
+        let mut pc: Pc = Pc::new();
+        pc_test_exec(     0,      0, 0, 0, 0, &mut pc);
+        pc_test_exec(     0,      0, 0, 0, 0, &mut pc);
+        pc_test_exec(     0,      0, 0, 0, 1, &mut pc);
+        pc_test_exec(     1,      0, 0, 0, 1, &mut pc);
+        pc_test_exec(     1, -32123, 0, 0, 1, &mut pc);
+        pc_test_exec(     2, -32123, 0, 0, 1, &mut pc);
+        pc_test_exec(     2, -32123, 0, 1, 1, &mut pc);
+        pc_test_exec(-32123, -32123, 0, 1, 1, &mut pc);
+        pc_test_exec(-32123, -32123, 0, 0, 1, &mut pc);
+        pc_test_exec(-32122, -32123, 0, 0, 1, &mut pc);
+        pc_test_exec(-32122, -32123, 0, 0, 1, &mut pc);
+        pc_test_exec(-32121, -32123, 0, 0, 1, &mut pc);
+        pc_test_exec(-32121,  12345, 0, 1, 0, &mut pc);
+        pc_test_exec( 12345,  12345, 0, 1, 0, &mut pc);
+        pc_test_exec( 12345,  12345, 1, 1, 0, &mut pc);
+        pc_test_exec(     0,  12345, 1, 1, 0, &mut pc);
+        pc_test_exec(     0,  12345, 0, 1, 1, &mut pc);
+        pc_test_exec( 12345,  12345, 0, 1, 1, &mut pc);
+        pc_test_exec( 12345,  12345, 1, 1, 1, &mut pc);
+        pc_test_exec(     0,  12345, 1, 1, 1, &mut pc);
+        pc_test_exec(     0,  12345, 0, 0, 1, &mut pc);
+        pc_test_exec(     1,  12345, 0, 0, 1, &mut pc);
+        pc_test_exec(     1,  12345, 1, 0, 1, &mut pc);
+        pc_test_exec(     0,  12345, 1, 0, 1, &mut pc);
+        pc_test_exec(     0,      0, 0, 1, 1, &mut pc);
+        pc_test_exec(     0,      0, 0, 1, 1, &mut pc);
+        pc_test_exec(     0,      0, 0, 0, 1, &mut pc);
+        pc_test_exec(     1,      0, 0, 0, 1, &mut pc);
+        pc_test_exec(     1,  22222, 1, 0, 0, &mut pc);
+        pc_test_exec(     0,  22222, 1, 0, 0, &mut pc);
     }
 }
