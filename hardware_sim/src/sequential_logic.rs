@@ -1,10 +1,4 @@
 use crate::bool_logic;
-use std::convert::{TryFrom};
-
-#[allow(dead_code)]
-pub fn entry_point() {
-    println!("in sequential_logic mod entry_point");
-}
 
 struct Dff {
     pre_value: u8
@@ -164,6 +158,7 @@ impl Ram64 {
 
 #[cfg(test)]
 mod test {
+    use std::convert::{TryFrom};
     use super::*;
 
     fn converter_16bit_to_array<'a>(input: &'a str) -> [u8; 16] {

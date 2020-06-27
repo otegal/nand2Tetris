@@ -1,9 +1,3 @@
-
-#[allow(dead_code)]
-pub fn entry_point() {
-    println!("in bool_logic mod entry_point");
-}
-
 pub fn nand(x: u8, y: u8) -> u8 {
     // 全ての基本
     if x == 1 && y == 1 {

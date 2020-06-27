@@ -1,11 +1,5 @@
 use crate::bool_logic;
 use std::collections::HashMap;
-use std::convert::{TryFrom};
-
-#[allow(dead_code)]
-pub fn entry_point() {
-    println!("in bool_arithmetic mod entry_point");
-}
 
 fn half_adder(a: u8, b: u8) -> HashMap<&'static str, u8> {
     let mut result = HashMap::new();
@@ -65,6 +59,7 @@ pub fn incrementer(a_arr: &[u8; 16]) -> [u8; 16] {
     result
 }
 
+#[warn(dead_code)]
 fn alu(x_arr: &[u8; 16], y_arr: &[u8; 16], zx: u8, nx: u8, zy: u8, ny: u8, f: u8, no: u8)
     -> ([u8; 16], u8, u8) {
     // ググりまくってもよくわからん。。。
@@ -122,6 +117,7 @@ fn alu(x_arr: &[u8; 16], y_arr: &[u8; 16], zx: u8, nx: u8, zy: u8, ny: u8, f: u8
 
 #[cfg(test)]
 mod test {
+    use std::convert::{TryFrom};
     use super::*;
 
     fn converter_16bit_to_array<'a>(input: &'a str) -> [u8; 16] {
