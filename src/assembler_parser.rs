@@ -9,8 +9,8 @@ pub fn parser(f: File) {
     for line in lines {
         println!("{:?}", line.unwrap()); // for debug
     }
+}
 
-
-    // TODO 出力
-
+fn hasMoreCommands() -> bool {
+    true
 }
