@@ -28,7 +28,7 @@ var Parser = /** @class */ (function () {
      */
     function Parser(filePath) {
         var fileContent = fs.readFileSync(path.resolve(__dirname, filePath), { encoding: 'utf-8' });
-        var lines = fileContent.replace(/ /g, '').split(/\n/);
+        var lines = fileContent.replace(/ /g, '').split(/[\n|\r\n]/);
         this.instructions = lines.filter(function (line) {
             return line !== '' && line.indexOf('//') !== 0;
         });

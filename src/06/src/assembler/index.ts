@@ -5,8 +5,8 @@ import Code from './code'
 import SymbolTable from './symbolTable'
 import { A_COMMAND, C_COMMAND, L_COMMAND } from './constants' 
 
-const INPUT_PATH = '../src/add/Add.asm'
-const OUTPUT_PATH = __dirname + '/Add.hack'
+const INPUT_PATH = '../src/max/MaxL.asm'
+const OUTPUT_PATH = __dirname + '/MaxL.hack'
 
 const assembler = () => {
   const parser = new Parser(INPUT_PATH)
@@ -22,8 +22,8 @@ const assembler = () => {
       romAddress = romAddress + 1
     } else if (commandType === L_COMMAND) {
       const symbol = parser.symbol()
-      if (symbolTable.contains(symbol)) {
-        let address = ('000000' + romAddress.toString(16).slice(-6))
+      if (!symbolTable.contains(symbol)) {
+        let address = '0x' + ('0000' + romAddress.toString(16)).slice(-4)
         symbolTable.addEntry(symbol, address)
       }
     } else {
@@ -64,7 +64,7 @@ const assembler = () => {
           symbolTable.addEntry(symbol, address)
           ramAddress = ramAddress + 1
         }
-        machineCode = ('0000000000000000' + parseInt(address, 16).toString(2).slice(-16))
+        machineCode = ('0000000000000000' + parseInt(address, 16).toString(2)).slice(-16)
       } else {
         machineCode = ('0000000000000000' + parseInt(symbol).toString(2)).slice(-16)
       }

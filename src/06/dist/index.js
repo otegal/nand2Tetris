@@ -27,8 +27,8 @@ var parser_1 = __importDefault(require("./parser"));
 var code_1 = __importDefault(require("./code"));
 var symbolTable_1 = __importDefault(require("./symbolTable"));
 var constants_1 = require("./constants");
-var INPUT_PATH = '../src/add/Add.asm';
-var OUTPUT_PATH = __dirname + '/Add.hack';
+var INPUT_PATH = '../src/max/MaxL.asm';
+var OUTPUT_PATH = __dirname + '/MaxL.hack';
 var assembler = function () {
     var parser = new parser_1.default(INPUT_PATH);
     var code = new code_1.default();
@@ -43,8 +43,8 @@ var assembler = function () {
         }
         else if (commandType === constants_1.L_COMMAND) {
             var symbol = parser.symbol();
-            if (symbolTable.contains(symbol)) {
-                var address = ('000000' + romAddress.toString(16).slice(-6));
+            if (!symbolTable.contains(symbol)) {
+                var address = '0x' + ('0000' + romAddress.toString(16)).slice(-4);
                 symbolTable.addEntry(symbol, address);
             }
         }
@@ -82,7 +82,7 @@ var assembler = function () {
                     symbolTable.addEntry(symbol, address);
                     ramAddress = ramAddress + 1;
                 }
-                machineCode = ('0000000000000000' + parseInt(address, 16).toString(2).slice(-16));
+                machineCode = ('0000000000000000' + parseInt(address, 16).toString(2)).slice(-16);
             }
             else {
                 machineCode = ('0000000000000000' + parseInt(symbol).toString(2)).slice(-16);
