@@ -5,8 +5,8 @@ import Code from './code'
 import SymbolTable from './symbolTable'
 import { A_COMMAND, C_COMMAND, L_COMMAND } from './constants' 
 
-const INPUT_PATH = '../src/max/MaxL.asm'
-const OUTPUT_PATH = __dirname + '/MaxL.hack'
+const INPUT_PATH = '../src/rect/Rect.asm'
+const OUTPUT_PATH = __dirname + '/Rect.hack'
 
 const assembler = () => {
   const parser = new Parser(INPUT_PATH)
