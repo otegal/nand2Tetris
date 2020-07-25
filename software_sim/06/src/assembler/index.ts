@@ -5,8 +5,8 @@ import Code from './code'
 import SymbolTable from './symbolTable'
 import { A_COMMAND, C_COMMAND, L_COMMAND } from './constants' 
 
-const INPUT_PATH = '../src/rect/Rect.asm'
-const OUTPUT_PATH = __dirname + '/Rect.hack'
+const INPUT_PATH = '../src/pong/PongL.asm'
+const OUTPUT_PATH = __dirname + '/PongL.hack'
 
 const assembler = () => {
   const parser = new Parser(INPUT_PATH)
@@ -50,6 +50,10 @@ const assembler = () => {
       const dest = code.dest(destMnemonic)
       const comp = code.comp(compMnemonic)
       const jump = code.jump(jumpMnemonic)
+      // if (compMnemonic == undefined) {
+      //   console.log(comp, compMnemonic, parser)
+      //   console.log(parser.instructions[parser.lineCounter])
+      // }
       machineCodes.push('111' + comp + dest + jump)
     }
 

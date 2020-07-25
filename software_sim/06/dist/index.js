@@ -27,8 +27,8 @@ var parser_1 = __importDefault(require("./parser"));
 var code_1 = __importDefault(require("./code"));
 var symbolTable_1 = __importDefault(require("./symbolTable"));
 var constants_1 = require("./constants");
-var INPUT_PATH = '../src/rect/Rect.asm';
-var OUTPUT_PATH = __dirname + '/Rect.hack';
+var INPUT_PATH = '../src/pong/PongL.asm';
+var OUTPUT_PATH = __dirname + '/PongL.hack';
 var assembler = function () {
     var parser = new parser_1.default(INPUT_PATH);
     var code = new code_1.default();
@@ -68,6 +68,10 @@ var assembler = function () {
             var dest = code.dest(destMnemonic);
             var comp = code.comp(compMnemonic);
             var jump = code.jump(jumpMnemonic);
+            // if (compMnemonic == undefined) {
+            //   console.log(comp, compMnemonic, parser)
+            //   console.log(parser.instructions[parser.lineCounter])
+            // }
             machineCodes.push('111' + comp + dest + jump);
         }
         if (commandType === constants_1.A_COMMAND) {
