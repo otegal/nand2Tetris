@@ -14,7 +14,7 @@ class Parser {
    */
   constructor(filePath: string) {
     const fileContent = fs.readFileSync(path.resolve(__dirname, filePath), { encoding: 'utf-8' })
-    const lines = fileContent.replace(/ /g, '').split(/\r\n/)
+    const lines = fileContent.replace(/ /g, '').split(/\n/)
     this.instructions = lines.filter((line) => {
       return line !== '' && line.indexOf('//') !== 0
     });

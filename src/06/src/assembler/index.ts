@@ -5,8 +5,8 @@ import Code from './code'
 import SymbolTable from './symbolTable'
 import { A_COMMAND, C_COMMAND, L_COMMAND } from './constants' 
 
-const INPUT_PATH = './add/Add.asm'
-const OUTPUT_PATH = __dirname + '/../add/AddCreate.hack'
+const INPUT_PATH = '../src/add/Add.asm'
+const OUTPUT_PATH = __dirname + '/Add.hack'
 
 const assembler = () => {
   const parser = new Parser(INPUT_PATH)
@@ -55,7 +55,6 @@ const assembler = () => {
 
     if (commandType === A_COMMAND) {
       const symbol = parser.symbol()
-
       if (isNaN(parseInt(symbol))) {
         let address
         if (symbolTable.contains(symbol)) {
@@ -67,7 +66,7 @@ const assembler = () => {
         }
         machineCode = ('0000000000000000' + parseInt(address, 16).toString(2).slice(-16))
       } else {
-        machineCode = ('0000000000000000' + parseInt(symbol).toString(2).slice(-16))
+        machineCode = ('0000000000000000' + parseInt(symbol).toString(2)).slice(-16)
       }
 
       machineCodes.push(machineCode)
@@ -77,3 +76,5 @@ const assembler = () => {
   }
   fs.writeFileSync(OUTPUT_PATH, machineCodes.join('\n'))
 }
+
+assembler()

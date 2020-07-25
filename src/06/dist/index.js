@@ -27,8 +27,8 @@ var parser_1 = __importDefault(require("./parser"));
 var code_1 = __importDefault(require("./code"));
 var symbolTable_1 = __importDefault(require("./symbolTable"));
 var constants_1 = require("./constants");
-var INPUT_PATH = './add/Add.asm';
-var OUTPUT_PATH = __dirname + '/../add/AddCreate.hack';
+var INPUT_PATH = '../src/add/Add.asm';
+var OUTPUT_PATH = __dirname + '/Add.hack';
 var assembler = function () {
     var parser = new parser_1.default(INPUT_PATH);
     var code = new code_1.default();
@@ -85,7 +85,7 @@ var assembler = function () {
                 machineCode = ('0000000000000000' + parseInt(address, 16).toString(2).slice(-16));
             }
             else {
-                machineCode = ('0000000000000000' + parseInt(symbol).toString(2).slice(-16));
+                machineCode = ('0000000000000000' + parseInt(symbol).toString(2)).slice(-16);
             }
             machineCodes.push(machineCode);
         }
@@ -93,3 +93,4 @@ var assembler = function () {
     }
     fs.writeFileSync(OUTPUT_PATH, machineCodes.join('\n'));
 };
+assembler();
