@@ -76,6 +76,7 @@ var CodeWriter = /** @class */ (function () {
                 case 'pointer':
                 case 'temp':
                     this.writePushFromFixedSegment(segment, index);
+                    break;
                 case 'static':
                     this.writeCodes(["@" + this.fileName + "." + index, 'D=M']);
                     this.writePushFromD();
@@ -84,7 +85,7 @@ var CodeWriter = /** @class */ (function () {
                     throw new Error('invalid segment');
             }
         }
-        else if (command == constants_1.C_POP) {
+        else if (command === constants_1.C_POP) {
             switch (segment) {
                 case 'local':
                 case 'argument':
@@ -134,7 +135,7 @@ var CodeWriter = /** @class */ (function () {
                 formula = 'D=D+M';
                 break;
             case 'sub':
-                formula = 'D=D-M';
+                formula = 'D=M-D';
                 break;
             case 'and':
                 formula = 'D=D&M';

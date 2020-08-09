@@ -75,6 +75,7 @@ class CodeWriter {
         case 'pointer':
         case 'temp':
           this.writePushFromFixedSegment(segment, index)
+          break
         case 'static':
           this.writeCodes([`@${this.fileName}.${index}`, 'D=M'])
           this.writePushFromD()
@@ -82,7 +83,7 @@ class CodeWriter {
         default:
           throw new Error('invalid segment')
       }
-    } else if (command == C_POP) {
+    } else if (command === C_POP) {
       switch(segment) {
         case 'local':
         case 'argument':
@@ -136,7 +137,7 @@ class CodeWriter {
         formula = 'D=D+M'
         break
       case 'sub':
-        formula = 'D=D-M'
+        formula = 'D=M-D'
         break
       case 'and':
         formula = 'D=D&M'
@@ -242,7 +243,7 @@ class CodeWriter {
     this.writePushFromD()
   }
 
-  writePopToFixedSegment(segment: string, index: number) {
+  private writePopToFixedSegment(segment: string, index: number) {
     this.writePopToA()
 
     const label = this.getLabelBySegment(segment)
