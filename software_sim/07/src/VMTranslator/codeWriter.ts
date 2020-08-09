@@ -59,7 +59,8 @@ class CodeWriter {
   /**
    * C_PUSHまたはC_POPコマンドをアセンブリコードに変換し、それを書き込む
    */
-  writePushPop(command: string, segment: string, index: number) {
+  writePushPop(command: string, segment: string, index: number|null) {
+    if (index === null) return
     if (command === C_PUSH) {
       switch(segment) {
         case 'constant':

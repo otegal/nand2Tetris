@@ -26,7 +26,7 @@ class Parser {
     const fileContent = fs.readFileSync(path.resolve(__dirname, filePath), {encoding: 'utf-8'})
     const lines = fileContent.split(/\r\n/)
     this.instructions = lines.filter((line) => {
-      return line !== '' && line.indexOf("//") !==0;
+      return line !== '' && line.indexOf("//") !== 0;
     })
     this.lineCounter = 0;
     this.currentCommand = this.instructions[this.lineCounter]
@@ -89,8 +89,8 @@ class Parser {
    * 現コマンドが以下の場合だけ呼ぶ事可能
    * C_PUSH, C_POP, C_FUNCTION, C_CALL
    */
-  arg2(): number|void {
-    if (![C_PUSH, C_POP, C_FUNCTION, C_CALL].includes(this.commandType())) return
+  arg2(): number|null {
+    if (![C_PUSH, C_POP, C_FUNCTION, C_CALL].includes(this.commandType())) return null
     return parseInt(this.currentCommand.split(' ')[2])
   }
 }

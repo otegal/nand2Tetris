@@ -19,13 +19,22 @@ const vmTranslater = () => {
         if (command) {
           codeWriter.writeArithmetic(command)
         }
+        break
       case C_PUSH:
       case C_POP:
         const segment = parser.arg1()
         const index = parser.arg2()
-        if (segment && index) {
-          codeWriter.writePushPop(C_PUSH, segment, index)
+
+        if (index === null) {
+          throw new Error('invalid index')
         }
+
+        if (segment) {
+          codeWriter.writePushPop(parser.commandType(), segment, index)
+        }
+        break
+      default:
+        throw new Error('invalid commandType')
     }
     parser.advance()
   }

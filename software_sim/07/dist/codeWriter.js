@@ -61,6 +61,8 @@ var CodeWriter = /** @class */ (function () {
      * C_PUSHまたはC_POPコマンドをアセンブリコードに変換し、それを書き込む
      */
     CodeWriter.prototype.writePushPop = function (command, segment, index) {
+        if (index === null)
+            return;
         if (command === constants_1.C_PUSH) {
             switch (segment) {
                 case 'constant':

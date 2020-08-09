@@ -17,13 +17,20 @@ var vmTranslater = function () {
                 if (command) {
                     codeWriter.writeArithmetic(command);
                 }
+                break;
             case constants_1.C_PUSH:
             case constants_1.C_POP:
                 var segment = parser.arg1();
                 var index = parser.arg2();
-                if (segment && index) {
-                    codeWriter.writePushPop(constants_1.C_PUSH, segment, index);
+                if (index === null) {
+                    throw new Error('invalid index');
                 }
+                if (segment) {
+                    codeWriter.writePushPop(parser.commandType(), segment, index);
+                }
+                break;
+            default:
+                throw new Error('invalid commandType');
         }
         parser.advance();
     }

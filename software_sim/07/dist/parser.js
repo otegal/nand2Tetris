@@ -109,7 +109,7 @@ var Parser = /** @class */ (function () {
      */
     Parser.prototype.arg2 = function () {
         if (![constants_1.C_PUSH, constants_1.C_POP, constants_1.C_FUNCTION, constants_1.C_CALL].includes(this.commandType()))
-            return;
+            return null;
         return parseInt(this.currentCommand.split(' ')[2]);
     };
     return Parser;
