@@ -85,7 +85,7 @@ var Parser = /** @class */ (function () {
             returnString = constants_1.C_CALL;
         }
         else {
-            constants_1.C_ARITHMETIC;
+            returnString = constants_1.C_ARITHMETIC;
         }
         return returnString;
     };

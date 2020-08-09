@@ -66,7 +66,7 @@ class Parser {
     else if (cmd.indexOf('function') === 0) { returnString = C_FUNCTION }
     else if (cmd.indexOf('return')   === 0) { returnString = C_RETURN }
     else if (cmd.indexOf('call')     === 0) { returnString = C_CALL }
-    else { C_ARITHMETIC }
+    else { returnString = C_ARITHMETIC }
 
     return returnString
   }
