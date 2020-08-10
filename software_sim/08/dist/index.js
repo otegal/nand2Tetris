@@ -39,12 +39,12 @@ var vmTranslater = function () {
     for (var _i = 0, files_1 = files; _i < files_1.length; _i++) {
         var file = files_1[_i];
         var filePath = directoryPath + '/' + file;
-        translate(file, filePath, codeWriter);
+        translate(fileName, filePath, codeWriter);
     }
 };
-var translate = function (file, filePath, codeWriter) {
+var translate = function (fileName, filePath, codeWriter) {
     var parser = new parser_1.default(filePath);
-    codeWriter.setFileName(file);
+    codeWriter.setFileName(fileName);
     while (parser.hasMoreCommands()) {
         switch (parser.commandType()) {
             case constants_1.C_ARITHMETIC:

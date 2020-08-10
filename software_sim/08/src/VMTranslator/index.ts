@@ -27,13 +27,13 @@ const vmTranslater = () => {
 
   for (const file of files) {
     const filePath = directoryPath + '/' + file
-    translate(file, filePath, codeWriter)
+    translate(fileName, filePath, codeWriter)
   }
 }
 
-const translate = (file: string, filePath: string, codeWriter: CodeWriter) => {
+const translate = (fileName: string, filePath: string, codeWriter: CodeWriter) => {
   const parser = new Parser(filePath)
-  codeWriter.setFileName(file)
+  codeWriter.setFileName(fileName)
 
   while (parser.hasMoreCommands()) {
     switch(parser.commandType()) {

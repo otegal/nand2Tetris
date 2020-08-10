@@ -23,20 +23,14 @@ class CodeWriter {
    * 出力ファイル/ストリームを開き、書き込む準備を行う
    */
   constructor(filePath: string) {
-    const index = filePath.lastIndexOf('.')
-    this.outputPath = __dirname + '/' + filePath.slice(0, index) + '.asm'
+    this.outputPath = __dirname + '/' + filePath
     fs.writeFileSync(this.outputPath, '')
-    const index2 = this.outputPath.lastIndexOf('/')
-    this.fileName = this.outputPath.slice(index2 + 1)
 
-    // this.outputPath = __dirname + '/' + filePath
-    // fs.writeFileSync(this.outputPath, '')
-
-    // this.fileName = ''
+    this.fileName = ''
     this.labelNumForCompare = 0
     this.labelNumForReturnAddress = 0
 
-    // this.writeInit()
+    this.writeInit()
   }
 
   /**
