@@ -15,8 +15,7 @@ import {
 class CodeWriter {
 
   outputPath: string
-  fileName: string = ''
-  labelNum: number = 0
+  fileName: string
   labelNumForCompare: number
   labelNumForReturnAddress: number
 
@@ -27,9 +26,11 @@ class CodeWriter {
     this.outputPath = __dirname + '/' + filePath
     fs.writeFileSync(this.outputPath, '')
 
+    this.fileName = ''
     this.labelNumForCompare = 0
     this.labelNumForReturnAddress = 0
-    this.writeInit()
+
+    // this.writeInit()
   }
 
   /**
@@ -99,7 +100,10 @@ class CodeWriter {
           this.writePushFromFixedSegment(segment, index)
           break
         case 'static':
-          this.writeCodes([`@${this.fileName}.${index}`, 'D=M'])
+          this.writeCodes([
+            `@${this.fileName}.${index}`,
+            'D=M'
+          ])
           this.writePushFromD()
           break
         default:
@@ -119,7 +123,11 @@ class CodeWriter {
           break
         case 'static':
           this.writePopToA()
-          this.writeCodes(['D=M', `@${this.fileName}.${index}`, 'M=D'])
+          this.writeCodes([
+            'D=M',
+            `@${this.fileName}.${index}`,
+            'M=D'
+          ])
           break
         default:
           throw new Error('invalid segment')
@@ -165,13 +173,13 @@ class CodeWriter {
     this.writeCodes([
       `@RETURN_ADDRESS_${this.labelNumForReturnAddress}`,
       'D=A',
-    ]);
+    ])
     this.writePushFromD()
 
     this.writeCodes([
       '@LCL',
       'D=M',
-    ]);
+    ])
     this.writePushFromD()
 
     this.writeCodes([
@@ -229,7 +237,7 @@ class CodeWriter {
       'D=M',
       '@R14', // R14にRETを保存
       'M=D'
-    ]);
+    ])
 
     this.writePopToA()
     this.writeCodes([
@@ -355,18 +363,18 @@ class CodeWriter {
     this.writePopToA()
     this.writeCodes([
       'D=M-D',
-      `@RETURN_TRUE_${this.labelNum}`,
+      `@RETURN_TRUE_${this.labelNumForCompare}`,
       `D;${mnemonic}`,
       'D=0',
-      `@NEXT_${this.labelNum}`,
+      `@NEXT_${this.labelNumForCompare}`,
       '0;JMP',
-      `(RETURN_TRUE_${this.labelNum})`,
+      `(RETURN_TRUE_${this.labelNumForCompare})`,
       'D=-1',
-      `(NEXT_${this.labelNum})`
+      `(NEXT_${this.labelNumForCompare})`
     ]);
     this.writePushFromD()
 
-    this.labelNum = this.labelNum + 1
+    this.labelNumForCompare = this.labelNumForCompare + 1
   }
 
   private writeCodes(codes: Array<string>) {
@@ -374,20 +382,32 @@ class CodeWriter {
   }
 
   private writePopToA() {
-    this.writeCodes(['@SP', 'M=M-1', 'A=M'])
+    this.writeCodes([
+      '@SP',
+      'M=M-1',
+      'A=M'
+    ])
   }
 
   private writePushFromD() {
-    this.writeCodes(['@SP', 'A=M', 'M=D', '@SP', 'M=M+1'])
+    this.writeCodes([
+      '@SP',
+      'A=M',
+      'M=D',
+      '@SP',
+      'M=M+1'
+    ])
   }
 
   private writePushFromReferencedSegment(segment: string, index: number) {
     const label = this.getLabelBySegment(segment)
-    this.writeCodes([`@${label}`, 'A=M'])
+    this.writeCodes([
+      `@${label}`,
+      'A=M'
+    ])
 
-    const indexNum = Number(index)
-    if (indexNum) {
-      this.writeCodes(new Array(indexNum).fill('A=A+1'))
+    if (index) {
+      this.writeCodes(new Array(index).fill('A=A+1'))
     }
 
     this.writeCodes(['D=M'])
@@ -398,11 +418,14 @@ class CodeWriter {
     this.writePopToA()
 
     const label = this.getLabelBySegment(segment)
-    this.writeCodes(['D=M', `@${label}`, 'A=M'])
+    this.writeCodes([
+      'D=M',
+      `@${label}`,
+      'A=M'
+    ])
 
-    const indexNum = Number(index)
-    if (indexNum) {
-      this.writeCodes(new Array(indexNum).fill('A=A+1'))
+    if (index) {
+      this.writeCodes(new Array(index).fill('A=A+1'))
     }
 
     this.writeCodes(['M=D'])
@@ -412,9 +435,8 @@ class CodeWriter {
     const label = this.getLabelBySegment(segment)
     this.writeCodes([`@${label}`])
 
-    const indexNum = Number(index)
-    if (indexNum) {
-      this.writeCodes(new Array(indexNum).fill('A=A+1'))
+    if (index) {
+      this.writeCodes(new Array(index).fill('A=A+1'))
     }
 
     this.writeCodes(['D=M'])
@@ -425,11 +447,13 @@ class CodeWriter {
     this.writePopToA()
 
     const label = this.getLabelBySegment(segment)
-    this.writeCodes(['D=M', `@${label}`])
+    this.writeCodes([
+      'D=M',
+      `@${label}`
+    ])
 
-    const indexNum = Number(index)
-    if (indexNum) {
-      this.writeCodes(new Array(indexNum).fill('A=A+1'))
+    if (index) {
+      this.writeCodes(new Array(index).fill('A=A+1'))
     }
 
     this.writeCodes(['M=D'])

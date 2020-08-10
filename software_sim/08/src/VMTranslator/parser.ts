@@ -26,7 +26,7 @@ class Parser {
     const fileContent = fs.readFileSync(path.resolve(__dirname, filePath), {encoding: 'utf-8'})
     const lines = fileContent.split(/\r\n/)
     this.instructions = lines.filter((line) => {
-      return line !== '' && line.indexOf("//") !== 0;
+      return line !== '' && !line.startsWith('//')
     })
     this.lineCounter = 0;
     this.currentCommand = this.instructions[this.lineCounter]
@@ -79,7 +79,7 @@ class Parser {
   arg1(): string|void {
     if (this.commandType() === C_RETURN) return
     if (this.commandType() === C_ARITHMETIC) {
-      return this.currentCommand
+      return this.currentCommand.split(' ')[0]
     }
     return this.currentCommand.split(' ')[1]
   }

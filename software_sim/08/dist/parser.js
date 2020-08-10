@@ -30,7 +30,7 @@ var Parser = /** @class */ (function () {
         var fileContent = fs.readFileSync(path.resolve(__dirname, filePath), { encoding: 'utf-8' });
         var lines = fileContent.split(/\r\n/);
         this.instructions = lines.filter(function (line) {
-            return line !== '' && line.indexOf("//") !== 0;
+            return line !== '' && !line.startsWith('//');
         });
         this.lineCounter = 0;
         this.currentCommand = this.instructions[this.lineCounter];
@@ -98,7 +98,7 @@ var Parser = /** @class */ (function () {
         if (this.commandType() === constants_1.C_RETURN)
             return;
         if (this.commandType() === constants_1.C_ARITHMETIC) {
-            return this.currentCommand;
+            return this.currentCommand.split(' ')[0];
         }
         return this.currentCommand.split(' ')[1];
     };

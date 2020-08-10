@@ -31,9 +31,9 @@ const vmTranslater = () => {
   }
 }
 
-const translate = (fileName: string, filePath: string, codeWriter: CodeWriter) => {
+const translate = (file: string, filePath: string, codeWriter: CodeWriter) => {
   const parser = new Parser(filePath)
-  codeWriter.setFileName(fileName)
+  codeWriter.setFileName(file)
 
   while (parser.hasMoreCommands()) {
     switch(parser.commandType()) {
@@ -57,36 +57,42 @@ const translate = (fileName: string, filePath: string, codeWriter: CodeWriter) =
         }
         break
       case C_LABEL:
-        const label = parser.arg1();
-        if (label) {
-          codeWriter.writeLabel(label);
-        }
+        const label = parser.arg1()
+        if (!label) {
+          throw new Error('invalid label')
+        } 
+
+        codeWriter.writeLabel(label)
         break
       case C_GOTO:
-        const gotoLabel = parser.arg1();
-        if (gotoLabel) {
-          codeWriter.writeGoto(gotoLabel);
+        const gotoLabel = parser.arg1()
+        if (!gotoLabel) {
+          throw new Error('invalid gotoLabel')
         }
+
+        codeWriter.writeGoto(gotoLabel)
         break
       case C_IF:
-        const ifLabel = parser.arg1();
-        if (ifLabel) {
-          codeWriter.writeIf(ifLabel);
+        const ifLabel = parser.arg1()
+        if (!ifLabel) {
+          throw new Error('invalid ifLabel')
         }
+
+        codeWriter.writeIf(ifLabel)
         break
       case C_FUNCTION:
-        const functionName = parser.arg1();
-        const numLocals = Number(parser.arg2());
+        const functionName = parser.arg1()
+        const numLocals = parser.arg2() ? Number(parser.arg2()) : 0
         if (functionName) {
-          codeWriter.writeFunction(functionName, numLocals);
+          codeWriter.writeFunction(functionName, numLocals)
         }
         break
       case C_RETURN:
-        codeWriter.writeReturn();
+        codeWriter.writeReturn()
         break
       case C_CALL:
-        const callFunctionName = parser.arg1();
-        const numArgs = Number(parser.arg2());
+        const callFunctionName = parser.arg1()
+        const numArgs = parser.arg2() ? Number(parser.arg2()) : 0
         if (callFunctionName) {
           codeWriter.writeCall(callFunctionName, numArgs);
         }

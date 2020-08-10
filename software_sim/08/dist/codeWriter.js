@@ -26,13 +26,12 @@ var CodeWriter = /** @class */ (function () {
      * 出力ファイル/ストリームを開き、書き込む準備を行う
      */
     function CodeWriter(filePath) {
-        this.fileName = '';
-        this.labelNum = 0;
         this.outputPath = __dirname + '/' + filePath;
         fs.writeFileSync(this.outputPath, '');
+        this.fileName = '';
         this.labelNumForCompare = 0;
         this.labelNumForReturnAddress = 0;
-        this.writeInit();
+        // this.writeInit()
     }
     /**
      * VMの初期化
@@ -99,7 +98,10 @@ var CodeWriter = /** @class */ (function () {
                     this.writePushFromFixedSegment(segment, index);
                     break;
                 case 'static':
-                    this.writeCodes(["@" + this.fileName + "." + index, 'D=M']);
+                    this.writeCodes([
+                        "@" + this.fileName + "." + index,
+                        'D=M'
+                    ]);
                     this.writePushFromD();
                     break;
                 default:
@@ -120,7 +122,11 @@ var CodeWriter = /** @class */ (function () {
                     break;
                 case 'static':
                     this.writePopToA();
-                    this.writeCodes(['D=M', "@" + this.fileName + "." + index, 'M=D']);
+                    this.writeCodes([
+                        'D=M',
+                        "@" + this.fileName + "." + index,
+                        'M=D'
+                    ]);
                     break;
                 default:
                     throw new Error('invalid segment');
@@ -333,33 +339,45 @@ var CodeWriter = /** @class */ (function () {
         this.writePopToA();
         this.writeCodes([
             'D=M-D',
-            "@RETURN_TRUE_" + this.labelNum,
+            "@RETURN_TRUE_" + this.labelNumForCompare,
             "D;" + mnemonic,
             'D=0',
-            "@NEXT_" + this.labelNum,
+            "@NEXT_" + this.labelNumForCompare,
             '0;JMP',
-            "(RETURN_TRUE_" + this.labelNum + ")",
+            "(RETURN_TRUE_" + this.labelNumForCompare + ")",
             'D=-1',
-            "(NEXT_" + this.labelNum + ")"
+            "(NEXT_" + this.labelNumForCompare + ")"
         ]);
         this.writePushFromD();
-        this.labelNum = this.labelNum + 1;
+        this.labelNumForCompare = this.labelNumForCompare + 1;
     };
     CodeWriter.prototype.writeCodes = function (codes) {
         fs.appendFileSync(this.outputPath, codes.join('\n') + '\n');
     };
     CodeWriter.prototype.writePopToA = function () {
-        this.writeCodes(['@SP', 'M=M-1', 'A=M']);
+        this.writeCodes([
+            '@SP',
+            'M=M-1',
+            'A=M'
+        ]);
     };
     CodeWriter.prototype.writePushFromD = function () {
-        this.writeCodes(['@SP', 'A=M', 'M=D', '@SP', 'M=M+1']);
+        this.writeCodes([
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'M=M+1'
+        ]);
     };
     CodeWriter.prototype.writePushFromReferencedSegment = function (segment, index) {
         var label = this.getLabelBySegment(segment);
-        this.writeCodes(["@" + label, 'A=M']);
-        var indexNum = Number(index);
-        if (indexNum) {
-            this.writeCodes(new Array(indexNum).fill('A=A+1'));
+        this.writeCodes([
+            "@" + label,
+            'A=M'
+        ]);
+        if (index) {
+            this.writeCodes(new Array(index).fill('A=A+1'));
         }
         this.writeCodes(['D=M']);
         this.writePushFromD();
@@ -367,19 +385,21 @@ var CodeWriter = /** @class */ (function () {
     CodeWriter.prototype.writePopToReferencedSegment = function (segment, index) {
         this.writePopToA();
         var label = this.getLabelBySegment(segment);
-        this.writeCodes(['D=M', "@" + label, 'A=M']);
-        var indexNum = Number(index);
-        if (indexNum) {
-            this.writeCodes(new Array(indexNum).fill('A=A+1'));
+        this.writeCodes([
+            'D=M',
+            "@" + label,
+            'A=M'
+        ]);
+        if (index) {
+            this.writeCodes(new Array(index).fill('A=A+1'));
         }
         this.writeCodes(['M=D']);
     };
     CodeWriter.prototype.writePushFromFixedSegment = function (segment, index) {
         var label = this.getLabelBySegment(segment);
         this.writeCodes(["@" + label]);
-        var indexNum = Number(index);
-        if (indexNum) {
-            this.writeCodes(new Array(indexNum).fill('A=A+1'));
+        if (index) {
+            this.writeCodes(new Array(index).fill('A=A+1'));
         }
         this.writeCodes(['D=M']);
         this.writePushFromD();
@@ -387,10 +407,12 @@ var CodeWriter = /** @class */ (function () {
     CodeWriter.prototype.writePopToFixedSegment = function (segment, index) {
         this.writePopToA();
         var label = this.getLabelBySegment(segment);
-        this.writeCodes(['D=M', "@" + label]);
-        var indexNum = Number(index);
-        if (indexNum) {
-            this.writeCodes(new Array(indexNum).fill('A=A+1'));
+        this.writeCodes([
+            'D=M',
+            "@" + label
+        ]);
+        if (index) {
+            this.writeCodes(new Array(index).fill('A=A+1'));
         }
         this.writeCodes(['M=D']);
     };

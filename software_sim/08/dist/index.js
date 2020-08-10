@@ -42,9 +42,9 @@ var vmTranslater = function () {
         translate(file, filePath, codeWriter);
     }
 };
-var translate = function (fileName, filePath, codeWriter) {
+var translate = function (file, filePath, codeWriter) {
     var parser = new parser_1.default(filePath);
-    codeWriter.setFileName(fileName);
+    codeWriter.setFileName(file);
     while (parser.hasMoreCommands()) {
         switch (parser.commandType()) {
             case constants_1.C_ARITHMETIC:
@@ -66,25 +66,28 @@ var translate = function (fileName, filePath, codeWriter) {
                 break;
             case constants_1.C_LABEL:
                 var label = parser.arg1();
-                if (label) {
-                    codeWriter.writeLabel(label);
+                if (!label) {
+                    throw new Error('invalid label');
                 }
+                codeWriter.writeLabel(label);
                 break;
             case constants_1.C_GOTO:
                 var gotoLabel = parser.arg1();
-                if (gotoLabel) {
-                    codeWriter.writeGoto(gotoLabel);
+                if (!gotoLabel) {
+                    throw new Error('invalid gotoLabel');
                 }
+                codeWriter.writeGoto(gotoLabel);
                 break;
             case constants_1.C_IF:
                 var ifLabel = parser.arg1();
-                if (ifLabel) {
-                    codeWriter.writeIf(ifLabel);
+                if (!ifLabel) {
+                    throw new Error('invalid ifLabel');
                 }
+                codeWriter.writeIf(ifLabel);
                 break;
             case constants_1.C_FUNCTION:
                 var functionName = parser.arg1();
-                var numLocals = Number(parser.arg2());
+                var numLocals = parser.arg2() ? Number(parser.arg2()) : 0;
                 if (functionName) {
                     codeWriter.writeFunction(functionName, numLocals);
                 }
@@ -94,7 +97,7 @@ var translate = function (fileName, filePath, codeWriter) {
                 break;
             case constants_1.C_CALL:
                 var callFunctionName = parser.arg1();
-                var numArgs = Number(parser.arg2());
+                var numArgs = parser.arg2() ? Number(parser.arg2()) : 0;
                 if (callFunctionName) {
                     codeWriter.writeCall(callFunctionName, numArgs);
                 }
