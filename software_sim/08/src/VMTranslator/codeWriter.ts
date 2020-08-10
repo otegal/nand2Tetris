@@ -15,20 +15,41 @@ import {
 class CodeWriter {
 
   outputPath: string
-  fileName: string
-  labelNum: number
+  fileName: string = ''
+  labelNum: number = 0
+  labelNumForCompare: number
+  labelNumForReturnAddress: number
 
   /**
    * 出力ファイル/ストリームを開き、書き込む準備を行う
    */
   constructor(filePath: string) {
-    const index = filePath.lastIndexOf('.')
-    this.outputPath = __dirname + '/' + filePath.slice(0, index) + '.asm'
+    this.outputPath = __dirname + '/' + filePath
     fs.writeFileSync(this.outputPath, '')
 
-    const index2 = this.outputPath.lastIndexOf('/')
-    this.fileName = this.outputPath.slice(index2 + 1)
-    this.labelNum = 0
+    this.labelNumForCompare = 0
+    this.labelNumForReturnAddress = 0
+    this.writeInit()
+  }
+
+  /**
+   * VMの初期化
+   */
+  writeInit() {
+    this.writeCodes([
+      '@256',
+      'D=A',
+      '@SP',
+      'M=D'
+    ])
+    this.writeCall('Sys.init', 0)
+  }
+
+  /**
+   * ファイル名をセットする
+   */
+  setFileName(fileName: string) {
+    this.fileName = fileName
   }
 
   /**
@@ -108,6 +129,162 @@ class CodeWriter {
     }
   }
 
+  /**
+   * labelコマンドを行うアセンブリコードを書く
+   */
+  writeLabel(label: string) {
+    this.writeCodes([`(${label})`])
+  }
+
+  /**
+   * gotoコマンドを行うアセンブリコードを書く
+   */
+  writeGoto(label: string) {
+    this.writeCodes([
+      `@${label}`,
+      '0;JMP'
+    ])
+  }
+
+  /**
+   * if-gotoコマンドを行うアセンブリコードを書く
+   */
+  writeIf(label: string) {
+    this.writePopToA()
+    this.writeCodes([
+      'D=M',
+      `@${label}`,
+      'D;JNE'
+    ])
+  }
+
+  /**
+   * callコマンドを行うアセンブリコードを書く
+   */
+  writeCall(functionName: string, numArgs: number = 0) {
+    this.writeCodes([
+      `@RETURN_ADDRESS_${this.labelNumForReturnAddress}`,
+      'D=A',
+    ]);
+    this.writePushFromD()
+
+    this.writeCodes([
+      '@LCL',
+      'D=M',
+    ]);
+    this.writePushFromD()
+
+    this.writeCodes([
+      '@ARG',
+      'D=M',
+    ])
+    this.writePushFromD()
+
+    this.writeCodes([
+      '@THIS',
+      'D=M',
+    ])
+    this.writePushFromD()
+
+    this.writeCodes([
+      '@THAT',
+      'D=M',
+    ])
+    this.writePushFromD()
+
+    this.writeCodes([
+      '@SP',
+      'D=M',
+      `@${numArgs}`,
+      'D=D-A',
+      `@5`,
+      'D=D-A',
+      '@ARG',
+      'M=D', // ARG = SP - numArgs - 5
+      '@SP',
+      'D=M',
+      '@LCL',
+      'M=D', // LCL = SP
+      `@${functionName}`,
+      '0;JMP',
+      `(RETURN_ADDRESS_${this.labelNumForReturnAddress})`,
+    ])
+
+    this.labelNumForReturnAddress = this.labelNumForReturnAddress + 1
+  }
+
+  /**
+   * returnコマンドを行うアセンブリコードを書く
+   */
+  writeReturn() {
+    this.writeCodes([
+      '@LCL',
+      'D=M',
+      '@R13', // R13にFRAMEを保存
+      'M=D',
+      '@5',
+      'D=A',
+      '@R13',
+      'A=M-D', // FRAME - 5
+      'D=M',
+      '@R14', // R14にRETを保存
+      'M=D'
+    ]);
+
+    this.writePopToA()
+    this.writeCodes([
+      'D=M',
+      '@ARG',
+      'A=M',
+      'M=D', // *ARG = pop()
+
+      '@ARG',
+      'D=M+1',
+      '@SP',
+      'M=D', // SP = ARG + 1
+
+      '@R13',
+      'AM=M-1',
+      'D=M',
+      '@THAT',
+      'M=D', // THAT = *(FRAME - 1)
+
+      '@R13',
+      'AM=M-1',
+      'D=M',
+      '@THIS',
+      'M=D', // THIS = *(FRAME - 2)
+
+      '@R13',
+      'AM=M-1',
+      'D=M',
+      '@ARG',
+      'M=D', // ARG = *(FRAME - 3)
+
+      '@R13',
+      'AM=M-1',
+      'D=M',
+      '@LCL',
+      'M=D', // LCL = *(FRAME - 4)
+
+      '@R14',
+      'A=M',
+      '0;JMP'
+    ])
+  }
+
+  /**
+   * functionコマンドを行うアセンブリコードを書く
+   */
+  writeFunction(functionName: string, numLocals: number = 0) {
+    this.writeCodes([
+      `(${functionName})`,
+      'D=0'
+    ])
+    for (let i = 0; i < numLocals; i++) {
+      this.writePushFromD()
+    }
+  }
 
   /**
    * private

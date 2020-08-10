@@ -26,13 +26,32 @@ var CodeWriter = /** @class */ (function () {
      * 出力ファイル/ストリームを開き、書き込む準備を行う
      */
     function CodeWriter(filePath) {
-        var index = filePath.lastIndexOf('.');
-        this.outputPath = __dirname + '/' + filePath.slice(0, index) + '.asm';
-        fs.writeFileSync(this.outputPath, '');
-        var index2 = this.outputPath.lastIndexOf('/');
-        this.fileName = this.outputPath.slice(index2 + 1);
+        this.fileName = '';
         this.labelNum = 0;
+        this.outputPath = __dirname + '/' + filePath;
+        fs.writeFileSync(this.outputPath, '');
+        this.labelNumForCompare = 0;
+        this.labelNumForReturnAddress = 0;
+        this.writeInit();
     }
+    /**
+     * VMの初期化
+     */
+    CodeWriter.prototype.writeInit = function () {
+        this.writeCodes([
+            '@256',
+            'D=A',
+            '@SP',
+            'M=D'
+        ]);
+        this.writeCall('Sys.init', 0);
+    };
+    /**
+     * ファイル名をセットする
+     */
+    CodeWriter.prototype.setFileName = function (fileName) {
+        this.fileName = fileName;
+    };
     /**
      * 与えられた算術コマンドをアセンブリコードに変換し、それを書き込む
      */
@@ -109,6 +128,146 @@ var CodeWriter = /** @class */ (function () {
         }
         else {
             throw new Error('invalid command for writePushPop');
+        }
+    };
+    /**
+     * labelコマンドを行うアセンブリコードを書く
+     */
+    CodeWriter.prototype.writeLabel = function (label) {
+        this.writeCodes(["(" + label + ")"]);
+    };
+    /**
+     * gotoコマンドを行うアセンブリコードを書く
+     */
+    CodeWriter.prototype.writeGoto = function (label) {
+        this.writeCodes([
+            "@" + label,
+            '0;JMP'
+        ]);
+    };
+    /**
+     * if-gotoコマンドを行うアセンブリコードを書く
+     */
+    CodeWriter.prototype.writeIf = function (label) {
+        this.writePopToA();
+        this.writeCodes([
+            'D=M',
+            "@" + label,
+            'D;JNE'
+        ]);
+    };
+    /**
+     * callコマンドを行うアセンブリコードを書く
+     */
+    CodeWriter.prototype.writeCall = function (functionName, numArgs) {
+        if (numArgs === void 0) { numArgs = 0; }
+        this.writeCodes([
+            "@RETURN_ADDRESS_" + this.labelNumForReturnAddress,
+            'D=A',
+        ]);
+        this.writePushFromD();
+        this.writeCodes([
+            '@LCL',
+            'D=M',
+        ]);
+        this.writePushFromD();
+        this.writeCodes([
+            '@ARG',
+            'D=M',
+        ]);
+        this.writePushFromD();
+        this.writeCodes([
+            '@THIS',
+            'D=M',
+        ]);
+        this.writePushFromD();
+        this.writeCodes([
+            '@THAT',
+            'D=M',
+        ]);
+        this.writePushFromD();
+        this.writeCodes([
+            '@SP',
+            'D=M',
+            "@" + numArgs,
+            'D=D-A',
+            "@5",
+            'D=D-A',
+            '@ARG',
+            'M=D',
+            '@SP',
+            'D=M',
+            '@LCL',
+            'M=D',
+            "@" + functionName,
+            '0;JMP',
+            "(RETURN_ADDRESS_" + this.labelNumForReturnAddress + ")",
+        ]);
+        this.labelNumForReturnAddress = this.labelNumForReturnAddress + 1;
+    };
+    /**
+     * returnコマンドを行うアセンブリコードを書く
+     */
+    CodeWriter.prototype.writeReturn = function () {
+        this.writeCodes([
+            '@LCL',
+            'D=M',
+            '@R13',
+            'M=D',
+            '@5',
+            'D=A',
+            '@R13',
+            'A=M-D',
+            'D=M',
+            '@R14',
+            'M=D'
+        ]);
+        this.writePopToA();
+        this.writeCodes([
+            'D=M',
+            '@ARG',
+            'A=M',
+            'M=D',
+            '@ARG',
+            'D=M+1',
+            '@SP',
+            'M=D',
+            '@R13',
+            'AM=M-1',
+            'D=M',
+            '@THAT',
+            'M=D',
+            '@R13',
+            'AM=M-1',
+            'D=M',
+            '@THIS',
+            'M=D',
+            '@R13',
+            'AM=M-1',
+            'D=M',
+            '@ARG',
+            'M=D',
+            '@R13',
+            'AM=M-1',
+            'D=M',
+            '@LCL',
+            'M=D',
+            '@R14',
+            'A=M',
+            '0;JMP'
+        ]);
+    };
+    /**
+     * functionコマンドを行うアセンブリコードを書く
+     */
+    CodeWriter.prototype.writeFunction = function (functionName, numLocals) {
+        if (numLocals === void 0) { numLocals = 0; }
+        this.writeCodes([
+            "(" + functionName + ")",
+            'D=0'
+        ]);
+        for (var i = 0; i < numLocals; i++) {
+            this.writePushFromD();
         }
     };
     /**
