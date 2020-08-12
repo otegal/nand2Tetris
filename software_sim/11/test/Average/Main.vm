@@ -1,220 +1,149 @@
-<class>
-  <keyword> class </keyword>
-  <identifier> Main </identifier>
-  <symbol> { </symbol>
-  <subroutineDec>
-    <keyword> function </keyword>
-    <keyword> void </keyword>
-    <identifier> main </identifier>
-    <symbol> ( </symbol>
-    <parameterList>
-    </parameterList>
-    <symbol> ) </symbol>
-    <subroutineBody>
-      <symbol> { </symbol>
-      <varDec>
-        <keyword> var </keyword>
-        <identifier> Array </identifier>
-        <identifier> a </identifier>
-        <symbol> ; </symbol>
-      </varDec>
-      <varDec>
-        <keyword> var </keyword>
-        <keyword> int </keyword>
-        <identifier> length </identifier>
-        <symbol> ; </symbol>
-      </varDec>
-      <varDec>
-        <keyword> var </keyword>
-        <keyword> int </keyword>
-        <identifier> i </identifier>
-        <symbol> , </symbol>
-        <identifier> sum </identifier>
-        <symbol> ; </symbol>
-      </varDec>
-      <statements>
-        <letStatement>
-          <keyword> let </keyword>
-          <identifier> length </identifier>
-          <symbol> = </symbol>
-          <expression>
-            <term>
-              <identifier> Keyboard </identifier>
-              <symbol> . </symbol>
-              <identifier> readInt </identifier>
-              <symbol> ( </symbol>
-              <expressionList>
-                <expression>
-                  <term>
-                    <stringConstant> How many numbers?  </stringConstant>
-                  </term>
-                </expression>
-              </expressionList>
-              <symbol> ) </symbol>
-            </term>
-          </expression>
-          <symbol> ; </symbol>
-        </letStatement>
-        <letStatement>
-          <keyword> let </keyword>
-          <identifier> a </identifier>
-          <symbol> = </symbol>
-          <expression>
-            <term>
-              <identifier> Array </identifier>
-              <symbol> . </symbol>
-              <identifier> new </identifier>
-              <symbol> ( </symbol>
-              <expressionList>
-                <expression>
-                  <term>
-                    <identifier> length </identifier>
-                  </term>
-                </expression>
-              </expressionList>
-              <symbol> ) </symbol>
-            </term>
-          </expression>
-          <symbol> ; </symbol>
-        </letStatement>
-        <letStatement>
-          <keyword> let </keyword>
-          <identifier> i </identifier>
-          <symbol> = </symbol>
-          <expression>
-            <term>
-              <integerConstant> 0 </integerConstant>
-            </term>
-          </expression>
-          <symbol> ; </symbol>
-        </letStatement>
-        <whileStatement>
-          <keyword> while </keyword>
-          <symbol> ( </symbol>
-          <expression>
-            <term>
-              <identifier> i </identifier>
-            </term>
-            <symbol> &lt; </symbol>
-            <term>
-              <identifier> length </identifier>
-            </term>
-          </expression>
-          <symbol> ) </symbol>
-          <symbol> { </symbol>
-          <statements>
-            <letStatement>
-              <keyword> let </keyword>
-              <identifier> a </identifier>
-              <symbol> [ </symbol>
-              <expression>
-                <term>
-                  <identifier> i </identifier>
-                </term>
-              </expression>
-              <symbol> ] </symbol>
-              <symbol> = </symbol>
-              <expression>
-                <term>
-                  <identifier> Keyboard </identifier>
-                  <symbol> . </symbol>
-                  <identifier> readInt </identifier>
-                  <symbol> ( </symbol>
-                  <expressionList>
-                    <expression>
-                      <term>
-                        <stringConstant> Enter a number:  </stringConstant>
-                      </term>
-                    </expression>
-                  </expressionList>
-                  <symbol> ) </symbol>
-                </term>
-              </expression>
-              <symbol> ; </symbol>
-            </letStatement>
-            <letStatement>
-              <keyword> let </keyword>
-              <identifier> sum </identifier>
-              <symbol> = </symbol>
-              <expression>
-                <term>
-                  <identifier> sum </identifier>
-                </term>
-                <symbol> + </symbol>
-                <term>
-                  <identifier> a </identifier>
-                  <symbol> [ </symbol>
-                  <expression>
-                    <term>
-                      <identifier> i </identifier>
-                    </term>
-                  </expression>
-                  <symbol> ] </symbol>
-                </term>
-              </expression>
-              <symbol> ; </symbol>
-            </letStatement>
-            <letStatement>
-              <keyword> let </keyword>
-              <identifier> i </identifier>
-              <symbol> = </symbol>
-              <expression>
-                <term>
-                  <identifier> i </identifier>
-                </term>
-                <symbol> + </symbol>
-                <term>
-                  <integerConstant> 1 </integerConstant>
-                </term>
-              </expression>
-              <symbol> ; </symbol>
-            </letStatement>
-          </statements>
-          <symbol> } </symbol>
-        </whileStatement>
-        <doStatement>
-          <keyword> do </keyword>
-          <identifier> Output </identifier>
-          <symbol> . </symbol>
-          <identifier> printString </identifier>
-          <symbol> ( </symbol>
-          <expressionList>
-            <expression>
-              <term>
-                <stringConstant> The average is  </stringConstant>
-              </term>
-            </expression>
-          </expressionList>
-          <symbol> ) </symbol>
-          <symbol> ; </symbol>
-        </doStatement>
-        <doStatement>
-          <keyword> do </keyword>
-          <identifier> Output </identifier>
-          <symbol> . </symbol>
-          <identifier> printInt </identifier>
-          <symbol> ( </symbol>
-          <expressionList>
-            <expression>
-              <term>
-                <identifier> sum </identifier>
-              </term>
-              <symbol> / </symbol>
-              <term>
-                <identifier> length </identifier>
-              </term>
-            </expression>
-          </expressionList>
-          <symbol> ) </symbol>
-          <symbol> ; </symbol>
-        </doStatement>
-        <returnStatement>
-          <keyword> return </keyword>
-          <symbol> ; </symbol>
-        </returnStatement>
-      </statements>
-      <symbol> } </symbol>
-    </subroutineBody>
-  </subroutineDec>
-  <symbol> } </symbol>
-</class>
+function Main.main 4
+push constant 18
+call String.new 1
+push constant 72
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 119
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 109
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 110
+call String.appendChar 2
+push constant 121
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 110
+call String.appendChar 2
+push constant 117
+call String.appendChar 2
+push constant 109
+call String.appendChar 2
+push constant 98
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 115
+call String.appendChar 2
+push constant 63
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+call Keyboard.readInt 1
+pop local 1
+push local 1
+call Array.new 1
+pop local 0
+push constant 0
+pop local 2
+label WHILE_LOOP_0
+push local 2
+push local 1
+lt
+not
+if-goto WHILE_END_0
+push local 2
+push local 0
+add
+push constant 16
+call String.new 1
+push constant 69
+call String.appendChar 2
+push constant 110
+call String.appendChar 2
+push constant 116
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 110
+call String.appendChar 2
+push constant 117
+call String.appendChar 2
+push constant 109
+call String.appendChar 2
+push constant 98
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 58
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+call Keyboard.readInt 1
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 3
+push local 0
+push local 2
+add
+pop pointer 1
+push that 0
+add
+pop local 3
+push local 2
+push constant 1
+add
+pop local 2
+goto WHILE_LOOP_0
+label WHILE_END_0
+push constant 15
+call String.new 1
+push constant 84
+call String.appendChar 2
+push constant 104
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 118
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 103
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 105
+call String.appendChar 2
+push constant 115
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+call Output.printString 1
+pop temp 0
+push local 3
+push local 1
+call Math.divide 2
+call Output.printInt 1
+pop temp 0
+push constant 0
+return
